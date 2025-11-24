@@ -55,6 +55,22 @@ public class AddModel : PageModel
             return Page();
         }
 
+        if (SelectedArticleId <= 0)
+        {
+            ModelState.AddModelError(string.Empty, "Bitte einen Artikel auswählen.");
+            return Page();
+        }
+
+        if (SelectedLocationId.HasValue)
+        {
+            var locationExists = await _context.Locations.AnyAsync(l => l.Id == SelectedLocationId.Value);
+            if (!locationExists)
+            {
+                ModelState.AddModelError(string.Empty, "Der gewählte Lagerplatz existiert nicht.");
+                return Page();
+            }
+        }
+
         var article = await _context.Articles.FindAsync(SelectedArticleId);
         if (article == null)
         {

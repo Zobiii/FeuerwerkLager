@@ -22,6 +22,12 @@ public class FireworksContext : DbContext
             .Property(s => s.Quantity)
             .HasDefaultValue(0);
 
+        modelBuilder.Entity<StockEntry>()
+            .ToTable("StockEntries", builder =>
+            {
+                builder.HasCheckConstraint("CK_StockEntries_Quantity_NonNegative", "[Quantity] >= 0");
+            });
+
         // Einzigartigkeit: Pro (Article, Location) nur eine Zeile
         modelBuilder.Entity<StockEntry>()
             .HasIndex(s => new { s.ArticleId, s.LocationId })

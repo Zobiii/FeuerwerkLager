@@ -1,5 +1,7 @@
 namespace FeuerwerkLager.Models;
 
+using System.ComponentModel.DataAnnotations;
+
 public class StockEntry
 {
     public int Id { get; set; }
@@ -10,5 +12,6 @@ public class StockEntry
     public int? LocationId { get; set; }           // null = frei
     public Location? Location { get; set; }
 
+    [Range(0, int.MaxValue)]
     public int Quantity { get; set; }              // z.B. 12 Stück
 }

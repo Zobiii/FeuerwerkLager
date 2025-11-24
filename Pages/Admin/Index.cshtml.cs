@@ -2,6 +2,7 @@ using FeuerwerkLager.Data;
 using FeuerwerkLager.Logs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace FeuerwerkLager.Pages.Admin;
@@ -51,14 +52,33 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
-    public IActionResult OnPostBackup()
+    private string GetDatabasePath()
     {
-        var dbPath = Path.Combine(_env.ContentRootPath, "fireworks.db");
+        var connectionString = _context.Database.GetConnectionString();
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Path.Combine(_env.ContentRootPath, "fireworks.db");
+        }
+
+        var builder = new SqliteConnectionStringBuilder(connectionString);
+        var dataSource = builder.DataSource;
+
+        if (!Path.IsPathRooted(dataSource))
+        {
+            dataSource = Path.Combine(_env.ContentRootPath, dataSource);
+        }
+
+        return dataSource;
+    }
+
+    public async Task<IActionResult> OnPostBackup()
+    {
+        var dbPath = GetDatabasePath();
         var backupDir = Path.Combine(_env.ContentRootPath, "Backups");
 
         if (!System.IO.File.Exists(dbPath))
         {
-            ModelState.AddModelError(string.Empty, "Keine Datenbankdatei gefunden (fireworks.db).");
+            ModelState.AddModelError(string.Empty, "Keine Datenbankdatei gefunden.");
             LoadBackups();
             return Page();
         }
@@ -68,7 +88,22 @@ public class IndexModel : PageModel
         var fileName = $"fireworks_{DateTime.Now:yyyyMMdd_HHmmss}.db";
         var destPath = Path.Combine(backupDir, fileName);
 
-        System.IO.File.Copy(dbPath, destPath);
+        try
+        {
+            await using var source = new SqliteConnection($"Data Source={dbPath}");
+            await source.OpenAsync();
+
+            await using var destination = new SqliteConnection($"Data Source={destPath}");
+            await destination.OpenAsync();
+
+            source.BackupDatabase(destination);
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, $"Backup fehlgeschlagen: {ex.Message}");
+            LoadBackups();
+            return Page();
+        }
 
         PlainFileLogger.Log($"Backup erstellt: {fileName}");
 

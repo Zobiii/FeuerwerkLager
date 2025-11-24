@@ -53,7 +53,7 @@ public class BarcodesModel : PageModel
 
         foreach (var loc in locations)
         {
-            // Was im Barcode steht – hier einfach der Lagerplatzname, z.B. "KT-01"
+            // Was im Barcode steht - hier einfach der Lagerplatzname, z.B. "KT-01"
             var value = loc.Name.Trim();
 
             var svgImage = writer.Write(value);

@@ -55,6 +55,16 @@ public class SetModel : PageModel
             return Page();
         }
 
+        if (SelectedLocationId.HasValue)
+        {
+            var locationExists = await _context.Locations.AnyAsync(l => l.Id == SelectedLocationId.Value);
+            if (!locationExists)
+            {
+                ModelState.AddModelError(string.Empty, "Der gewählte Lagerplatz existiert nicht.");
+                return Page();
+            }
+        }
+
         if (NewQuantity < 0)
         {
             ModelState.AddModelError(string.Empty, "Menge darf nicht negativ sein.");

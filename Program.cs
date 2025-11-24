@@ -1,4 +1,5 @@
 using FeuerwerkLager.Data;
+using FeuerwerkLager.Security;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,8 @@ var connectionString = builder.Configuration.GetConnectionString("FireworksDb")
 builder.Services.AddDbContext<FireworksContext>(options =>
     options.UseSqlite(connectionString));
 
+builder.Services.Configure<BasicAuthOptions>(
+    builder.Configuration.GetSection("BasicAuth"));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -24,6 +27,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<BasicAuthMiddleware>();
 
 app.UseRouting();
 

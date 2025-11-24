@@ -64,6 +64,19 @@ public class EditModel : PageModel
             return Page();
         }
 
+        if (Article.IsMultiPart)
+        {
+            if (!Article.PiecesPerUnit.HasValue || Article.PiecesPerUnit.Value <= 0)
+            {
+                ModelState.AddModelError(string.Empty, "Bei Artikeln mit Einzelteilen muss die Stückzahl pro Einheit > 0 sein.");
+                return Page();
+            }
+        }
+        else
+        {
+            Article.PiecesPerUnit = null;
+        }
+
         var existing = await _context.Articles.FindAsync(Article.Id);
         if (existing == null)
         {

@@ -87,6 +87,24 @@ public class IndexModel : PageModel
             ModelState.AddModelError(string.Empty, "Ausgang und Ziel dürfen nicht identisch sein.");
         }
 
+        if (FromLocationId.HasValue)
+        {
+            var fromExists = await _context.Locations.AnyAsync(l => l.Id == FromLocationId.Value);
+            if (!fromExists)
+            {
+                ModelState.AddModelError(string.Empty, "Der gewählte Ausgang existiert nicht.");
+            }
+        }
+
+        if (ToLocationId.HasValue)
+        {
+            var toExists = await _context.Locations.AnyAsync(l => l.Id == ToLocationId.Value);
+            if (!toExists)
+            {
+                ModelState.AddModelError(string.Empty, "Das gewählte Ziel existiert nicht.");
+            }
+        }
+
         var available = GetAvailableQuantity(SelectedArticleId, FromLocationId);
         if (Quantity > available)
         {

@@ -1,0 +1,94 @@
+@page
+@model FeuerwerkLager.Pages.Reports.NemOverviewModel
+@{
+    ViewData["Title"] = "NEM-Übersicht";
+}
+
+<div class="page-header">
+    <h2>NEM-Übersicht pro Lagerplatz</h2>
+    <p>Summen der Nettoexplosivmasse (NEM) nach Lagerplatz inklusive freier Bestände.</p>
+</div>
+
+<div class="toolbar">
+    <a asp-page="/Index" class="btn-secondary-custom">
+        🏠 Dashboard
+    </a>
+    <a asp-page="/Locations/Index" class="btn-secondary-custom">
+        📦 Lagerplätze
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title mb-0">Gesamte NEM im System</h3>
+    </div>
+    <div class="card-body">
+        <p>
+            NEM gesamt:
+            <strong>@Model.TotalNemAll.ToString("0.##")</strong>
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title mb-0">NEM nach Lagerplatz</h3>
+    </div>
+    <div class="card-body table-wrapper">
+        <table class="table table-sm custom-table">
+            <thead>
+                <tr>
+                    <th>Lagerplatz</th>
+                    <th class="text-end">Positionen</th>
+                    <th class="text-end">Gesamtmenge</th>
+                    <th class="text-end">NEM gesamt</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Rows.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                        Noch keine Bestände vorhanden.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var r in Model.Rows)
+                {
+                    var alertClass = "";
+                    if (r.TotalNem > 0 && r.TotalNem < 1000)
+                    {
+                        alertClass = "";
+                    }
+                    else if (r.TotalNem >= 1000 && r.TotalNem < 2000)
+                    {
+                        alertClass = "table-warning";
+                    }
+                    else if (r.TotalNem >= 2000)
+                    {
+                        alertClass = "table-danger";
+                    }
+
+                    <tr class="@alertClass">
+                        <td>
+                            @if (r.IsFree)
+                            {
+                                <span class="badge-free">@r.LocationName</span>
+                            }
+                            else
+                            {
+                                <span class="badge-location">@r.LocationName</span>
+                            }
+                        </td>
+                        <td class="text-end">@r.PositionCount</td>
+                        <td class="text-end">@r.TotalQuantity</td>
+                        <td class="text-end">@r.TotalNem.ToString("0.##")</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

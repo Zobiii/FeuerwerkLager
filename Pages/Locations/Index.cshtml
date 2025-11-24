@@ -1,0 +1,78 @@
+@page
+@model FeuerwerkLager.Pages.Locations.IndexModel
+@{
+    ViewData["Title"] = "Lagerplätze";
+}
+
+<div class="page-header">
+    <h2>Lagerplätze</h2>
+    <p>Alle Kartons / Lagerplätze mit Bestandsübersicht.</p>
+</div>
+
+<div class="toolbar">
+    <a asp-page="/Locations/Create" class="btn-main">
+        ➕ Lagerplatz anlegen
+    </a>
+    <a asp-page="/Locations/Delete" class="btn-secondary-custom">
+        🗑️ Lagerplatz löschen
+    </a>
+    <a asp-page="/Locations/Barcodes" class="btn-secondary-custom">
+        🖨️ Barcodes drucken
+    </a>
+    <a asp-page="/Index" class="btn-secondary-custom">
+        ⬅️ Zurück zum Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title mb-0">Lagerplätze</h3>
+    </div>
+    <div class="card-body table-wrapper">
+        <table class="table table-sm custom-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Beschreibung</th>
+                    <th class="text-end">Positionen</th>
+                    <th class="text-end">Gesamtmenge</th>
+                    <th class="text-end">NEM gesamt</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Locations.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        Noch keine Lagerplätze angelegt.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var loc in Model.Locations)
+                {
+                    <tr>
+                        <td>@loc.Name</td>
+                        <td>@loc.Description</td>
+                        <td class="text-end">@loc.PositionCount</td>
+                        <td class="text-end">@loc.TotalQuantity</td>
+                        <td class="text-end">
+                            @if (loc.TotalNEM.HasValue)
+                            {
+                                @loc.TotalNEM.Value.ToString("0.##")
+                            }
+                        </td>
+                        <td>
+                            <a asp-page="/Locations/Details" asp-route-id="@loc.Id" class="btn-ghost btn-sm">
+                                🔎 Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

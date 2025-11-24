@@ -1,0 +1,58 @@
+@page
+@model FeuerwerkLager.Pages.Inventory.SetModel
+@{
+    ViewData["Title"] = "Inventur";
+}
+
+<div class="page-header">
+    <h2>Inventur – Bestand direkt setzen</h2>
+    <p>Gezählte Menge für einen Artikel an einem Lagerplatz als neuen Soll-Bestand eintragen.</p>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+        <div class="form-grid two-columns">
+            <div class="form-group">
+                <label for="articleSelect">Artikel</label>
+                <select asp-for="SelectedArticleId" class="form-select" id="articleSelect">
+                    @foreach (var a in Model.Articles)
+                    {
+                        <option value="@a.Id">@a.Name (@a.Company)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewQuantity">Gezählte Menge (Soll)</label>
+                <input asp-for="NewQuantity" class="form-control" type="number" min="0" />
+            </div>
+
+            <div class="form-group">
+                <label>Lagerplatz</label>
+                <select asp-for="SelectedLocationId" class="form-select">
+                    <option value="">frei (nicht zugeordnet)</option>
+                    @foreach (var l in Model.Locations)
+                    {
+                        <option value="@l.Id">@l.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <p class="mt-2 text-muted" style="font-size:0.85rem;">
+            Hinweis: Die eingetragene Menge ersetzt die bisherige Menge am gewählten Lagerplatz komplett.
+            Bei <strong>0</strong> wird die Position entfernt.
+        </p>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn-main">
+                📋 Inventur übernehmen
+            </button>
+            <a asp-page="/Index" class="btn-secondary-custom">
+                ⬅️ Zurück zum Dashboard
+            </a>
+        </div>
+    </form>
+</div>

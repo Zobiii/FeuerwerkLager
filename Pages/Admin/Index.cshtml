@@ -1,0 +1,65 @@
+@page
+@model FeuerwerkLager.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<div class="page-header">
+    <h2>Admin & Wartung</h2>
+    <p>Datenbank-Reset und manuelle Backups.</p>
+</div>
+
+<div class="form-card mb-3">
+    <h3 class="h5 mb-3">Backup erstellen</h3>
+    <p class="text-muted" style="font-size:0.9rem;">
+        Erstellt eine Kopie der aktuellen Datenbankdatei <strong>fireworks.db</strong> im Ordner <code>Backups</code>
+        mit Zeitstempel. Ideal vor größeren Änderungen oder Inventuren.
+    </p>
+
+    <form method="post">
+        <button type="submit" asp-page-handler="Backup" class="btn-secondary-custom">
+            💾 Backup erstellen
+        </button>
+        <a asp-page="/Index" class="btn-ghost ms-2">
+            ⬅️ Zurück zum Dashboard
+        </a>
+    </form>
+
+    @if (Model.BackupFiles.Any())
+    {
+        <hr />
+        <h4 class="h6">Vorhandene Backups</h4>
+        <ul class="small text-muted">
+            @foreach (var file in Model.BackupFiles)
+            {
+                <li>@file</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="mt-2 text-muted small">Noch keine Backups erstellt.</p>
+    }
+</div>
+
+<div class="form-card">
+    <h3 class="h5 mb-3 text-danger">Datenbank RESET</h3>
+    <p class="text-muted" style="font-size:0.9rem;">
+        <strong>Achtung:</strong> Dieser Vorgang
+        <ul>
+            <li>löscht alle Artikel, Lagerplätze und Bestände</li>
+            <li>erstellt die Datenbankstruktur neu</li>
+            <li>setzt das Log zurück</li>
+        </ul>
+        Diese Aktion kann nicht rückgängig gemacht werden.
+    </p>
+
+    <form method="post">
+        <button type="submit" asp-page-handler="Reset" class="btn-danger-custom">
+            🧨 Datenbank RESET ausführen
+        </button>
+        <a asp-page="/Index" class="btn-secondary-custom ms-2">
+            ⬅️ Abbrechen / Zurück
+        </a>
+    </form>
+</div>

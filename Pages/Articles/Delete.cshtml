@@ -1,0 +1,62 @@
+@page
+@model FeuerwerkLager.Pages.Articles.DeleteModel
+@{
+    ViewData["Title"] = "Artikel löschen";
+}
+
+<div class="page-header">
+    <h2>Artikel löschen</h2>
+    <p>Einen Artikel komplett entfernen, inklusive aller Bestände und Buchungen.</p>
+</div>
+
+<div class="form-card">
+    @if (!Model.Articles.Any())
+    {
+        <p class="text-muted">
+            Es sind noch keine Artikel angelegt. Nichts zum Löschen vorhanden.
+        </p>
+
+        <a asp-page="/Index" class="btn-secondary-custom">
+            ⬅️ Zurück zum Dashboard
+        </a>
+    }
+    else
+    {
+        <form method="post">
+            <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="articleSelect">Artikel auswählen</label>
+                    <select asp-for="SelectedArticleId" class="form-control" id="articleSelect">
+                        <option value="">-- Artikel wählen --</option>
+                        @foreach (var a in Model.Articles)
+                        {
+                            <option value="@a.Id">
+                                @a.Name (@a.Company)
+                                @if (!string.IsNullOrWhiteSpace(a.ProductNumber))
+                                {
+                                    <text> - @a.ProductNumber</text>
+                                }
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <p class="mt-2 text-muted" style="font-size:0.85rem;">
+                Achtung: Der gewählte Artikel wird <strong>vollständig gelöscht</strong> – inklusive aller zugehörigen
+                Bestände in allen Lagerplätzen. Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn-danger-custom">
+                    🗑️ Artikel endgültig löschen
+                </button>
+                <a asp-page="/Index" class="btn-secondary-custom">
+                    ⬅️ Zurück zum Dashboard
+                </a>
+            </div>
+        </form>
+    }
+</div>

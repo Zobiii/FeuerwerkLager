@@ -1,0 +1,222 @@
+@page
+@model FeuerwerkLager.Pages.Locations.BarcodesModel
+@{
+    ViewData["Title"] = "Lagerplatz-Barcodes";
+}
+
+<div class="page-header">
+    <h2>Lagerplatz-Barcodes</h2>
+    <p>Barcodes für alle Lagerplätze. Wähle aus, welche du drucken möchtest.</p>
+</div>
+
+<div class="toolbar no-print">
+    <button type="button" class="btn-main" onclick="window.print()">
+        🖨️ Ausgewählte drucken
+    </button>
+    <a asp-page="/Locations/Index" class="btn-secondary-custom">
+        ⬅️ Zurück zu den Lagerplätzen
+    </a>
+</div>
+
+@if (!Model.Barcodes.Any())
+{
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted">Es sind noch keine Lagerplätze angelegt.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="form-card no-print" style="margin-bottom:1rem;">
+        <h3 class="h6 mb-2">Auswahl</h3>
+        <p class="text-muted" style="font-size:0.85rem;">
+            Hake die Lagerplätze an, für die du Barcodes drucken möchtest.
+        </p>
+
+        <div class="barcode-select-list">
+            @for (int i = 0; i < Model.Barcodes.Count; i++)
+            {
+                var row = Model.Barcodes[i];
+                <label class="barcode-select-item">
+                    <input type="checkbox"
+                           class="barcode-checkbox form-check-input"
+                           data-bid="@i"
+                           checked />
+                    <span class="barcode-select-name">@row.Name</span>
+                </label>
+            }
+        </div>
+
+        <div class="mt-2 d-flex gap-2">
+            <button type="button" class="btn-secondary-custom btn-sm" onclick="selectAllBarcodes(true)">
+                Alle auswählen
+            </button>
+            <button type="button" class="btn-ghost btn-sm" onclick="selectAllBarcodes(false)">
+                Keine auswählen
+            </button>
+        </div>
+    </div>
+
+    <div class="barcode-grid">
+        @for (int i = 0; i < Model.Barcodes.Count; i++)
+        {
+            var row = Model.Barcodes[i];
+            <div class="barcode-card" data-bid="@i">
+                <div class="barcode-header">
+                    <div class="barcode-name">@row.Name</div>
+                    @if (!string.IsNullOrWhiteSpace(row.Description))
+                    {
+                        <div class="barcode-desc">@row.Description</div>
+                    }
+                </div>
+                <div class="barcode-svg">
+                    @Html.Raw(row.SvgContent)
+                </div>
+                <div class="barcode-value">
+                    @row.Value
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Styles {
+    <style>
+        /* Layout für die Barcode-Seite */
+        .barcode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .barcode-card {
+            background: #111827;
+            border-radius: 0.75rem;
+            padding: 0.75rem 0.9rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .barcode-header {
+            width: 100%;
+            margin-bottom: 0.35rem;
+            text-align: center;
+        }
+
+        .barcode-name {
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 0.95rem;
+            color: #e5e7eb;
+        }
+
+        .barcode-desc {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .barcode-svg svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .barcode-value {
+            margin-top: 0.4rem;
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .barcode-select-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem 1.2rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .barcode-select-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+        }
+
+        .barcode-select-name {
+            white-space: nowrap;
+        }
+
+        .print-hidden {
+            display: none !important;
+        }
+
+        /* Druckansicht: weißer Hintergrund, volle Seite nutzen */
+        @@media print {
+            body {
+                background: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .page-header,
+            .toolbar.no-print,
+            .form-card.no-print,
+            .navbar,
+            footer {
+                display: none !important;
+            }
+
+            .barcode-card {
+                box-shadow: none;
+                border-radius: 0;
+                border: 1px solid #000;
+            }
+
+            .barcode-grid {
+                gap: 0.6rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function updateVisibleBarcodes() {
+            var checkboxes = document.querySelectorAll('.barcode-checkbox');
+            checkboxes.forEach(function (cb) {
+                var id = cb.getAttribute('data-bid');
+                var card = document.querySelector('.barcode-card[data-bid="' + id + '"]');
+                if (!card) return;
+                if (cb.checked) {
+                    card.classList.remove('print-hidden');
+                } else {
+                    card.classList.add('print-hidden');
+                }
+            });
+        }
+
+        function selectAllBarcodes(val) {
+            var checkboxes = document.querySelectorAll('.barcode-checkbox');
+            checkboxes.forEach(function (cb) {
+                cb.checked = val;
+            });
+            updateVisibleBarcodes();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var checkboxes = document.querySelectorAll('.barcode-checkbox');
+            checkboxes.forEach(function (cb) {
+                cb.addEventListener('change', updateVisibleBarcodes);
+            });
+            updateVisibleBarcodes();
+        });
+    </script>
+}

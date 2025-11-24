@@ -1,0 +1,37 @@
+@page
+@model FeuerwerkLager.Pages.Locations.CreateModel
+@{
+    ViewData["Title"] = "Lagerplatz erstellen";
+}
+
+<div class="page-header">
+    <h2>Lagerplatz (Karton) anlegen</h2>
+    <p>Boxen / Kartons definieren, in die du Artikel buchen kannst.</p>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="Location.Name">Name (z.B. Karton A1)</label>
+                <input asp-for="Location.Name" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Location.Description">Beschreibung</label>
+                <textarea asp-for="Location.Description" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn-main">
+                💾 Speichern
+            </button>
+            <a asp-page="/Index" class="btn-secondary-custom">
+                ⬅️ Zurück zum Dashboard
+            </a>
+        </div>
+    </form>
+</div>

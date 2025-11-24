@@ -1,0 +1,59 @@
+@page
+@model FeuerwerkLager.Pages.Stock.AddModel
+@{
+    ViewData["Title"] = "Bestand erhöhen";
+}
+
+<div class="page-header">
+    <h2>Bestand erhöhen (Inventur)</h2>
+    <p>Gefundene zusätzliche Stückzahlen einem bestehenden Artikel zuordnen.</p>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+        <div class="form-grid two-columns">
+            <div class="form-group">
+                <label for="articleSelect">Artikel</label>
+                <select asp-for="SelectedArticleId" class="form-control" id="articleSelect">
+                    @foreach (var a in Model.Articles)
+                    {
+                        <option value="@a.Id">@a.Name (@a.Company)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="QuantityToAdd">Zusätzliche Menge (Inventurfund)</label>
+                <input asp-for="QuantityToAdd" class="form-control" type="number" min="1" />
+            </div>
+
+            <div class="form-group">
+                <label>Lagerplatz, wo der Artikel liegt</label>
+                <select asp-for="SelectedLocationId" class="form-control">
+                    <option value="">frei (noch in keiner Box)</option>
+                    @foreach (var l in Model.Locations)
+                    {
+                        <option value="@l.Id">@l.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <p class="mt-2 text-muted" style="font-size:0.85rem;">
+            Wichtig: Wenn du die Menge in einem bestimmten Karton (z.B. <strong>KT01</strong>) erhöhen willst,
+            wähle hier genau diesen Lagerplatz. Nur wenn du die Auswahl auf <strong>„frei“</strong> lässt,
+            wird die zusätzliche Menge als freie Menge erfasst.
+        </p>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn-main">
+                ➕ Bestand erhöhen
+            </button>
+            <a asp-page="/Index" class="btn-secondary-custom">
+                ⬅️ Zurück zum Dashboard
+            </a>
+        </div>
+    </form>
+</div>

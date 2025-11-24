@@ -1,0 +1,86 @@
+@page
+@model FeuerwerkLager.Pages.Articles.CreateModel
+@{
+    ViewData["Title"] = "Artikel erstellen";
+}
+
+<div class="page-header">
+    <h2>Artikel anlegen</h2>
+    <p>Feuerwerksartikel anlegen. Bestände werden später über „Bestand erhöhen“ erfasst.</p>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+        <div class="form-grid two-columns">
+            <div class="form-group">
+                <label asp-for="Article.Name">Name</label>
+                <input asp-for="Article.Name" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Article.Company">Firma</label>
+                <input asp-for="Article.Company" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Article.ProductNumber">Produktnummer</label>
+                <input asp-for="Article.ProductNumber" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Article.NEM">NEM (z.B. g)</label>
+                <input asp-for="Article.NEM" class="form-control" type="number" step="0.01" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Article.Category">Kategorie</label>
+                <select asp-for="Article.Category" class="form-select">
+                    <option value="">-- auswählen --</option>
+                    <option>Raketen</option>
+                    <option>Batterie</option>
+                    <option>Verbund</option>
+                    <option>Leuchtfeuerwerk</option>
+                    <option>Knallartikel</option>
+                    <option>Jugendfeuerwerk</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Einzelteile</label>
+                <div class="form-check">
+                    <input asp-for="Article.IsMultiPart" class="form-check-input" type="checkbox" id="isMultiPartCreate" />
+                    <label class="form-check-label" for="isMultiPartCreate">
+                        Artikel besteht aus mehreren Einzelteilen (z.B. 100er Pack)
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Article.PiecesPerUnit">Einzelteile pro Artikel</label>
+                <input asp-for="Article.PiecesPerUnit" class="form-control" type="number" min="1" />
+                <small class="text-muted">z.B. 100 bei Schweizerkracher (1 Artikel = 100 Stück)</small>
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label asp-for="Article.Notes">Notizen</label>
+                <textarea asp-for="Article.Notes" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+
+        <p class="mt-2 text-muted" style="font-size:0.85rem;">
+            Hinweis: Die Stückzahl im Lager erfasst du über <strong>„Bestand erhöhen“</strong>, damit die Menge
+            direkt am richtigen Lagerplatz (z.B. <strong>KT01</strong>) landet.
+        </p>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn-main">
+                💾 Speichern
+            </button>
+            <a asp-page="/Index" class="btn-secondary-custom">
+                ⬅️ Zurück zum Dashboard
+            </a>
+        </div>
+    </form>
+</div>

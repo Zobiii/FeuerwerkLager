@@ -1,0 +1,161 @@
+﻿@*
+    Gemeinsames Layout für alle Seiten – V2
+*@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Feuerwerk Lager</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark main-navbar shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" asp-page="/Index">
+                    <span class="logo-dot me-2"></span>
+                    <span class="logo-text">FEUERWERK&nbsp;LAGER</span>
+                </a>
+
+                <button class="navbar-toggler" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar"
+                        aria-expanded="false"
+                        aria-label="Navigation umschalten">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 main-nav-links">
+
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Index">Dashboard</a>
+                        </li>
+
+                        <!-- Artikel Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navArticles"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Artikel
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navArticles">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Articles/Create">
+                                        ➕ Neu anlegen
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Articles/Edit">
+                                        ✏️ Bearbeiten
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Articles/Delete">
+                                        🗑️ Löschen
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Lager Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navLocations"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Lager
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navLocations">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Locations/Index">
+                                        📦 Lagerplätze
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Locations/Create">
+                                        ➕ Lagerplatz anlegen
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Locations/Delete">
+                                        🗑️ Lagerplatz löschen
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Locations/Barcodes">
+                                        🖨️ Lagerplatz-Barcodes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Reports/NemOverview">
+                                        📊 NEM-Übersicht
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Bestand Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navStock"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Bestand
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navStock">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Bookings/Index">
+                                        🔁 Buchen
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Stock/Add">
+                                        ➕ Bestand erhöhen
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Inventory/Set">
+                                        📋 Inventur (Soll setzen)
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Log -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Logs/Index">Log</a>
+                        </li>
+
+                        <!-- Admin -->
+                        <li class="nav-item">
+                            <a class="nav-link text-warning" asp-page="/Admin/Index">
+                                Admin
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="page-wrapper">
+        <main role="main" class="container py-4">
+            @RenderBody()
+        </main>
+
+        <footer class="footer border-top text-muted">
+            <div class="container small d-flex justify-content-between align-items-center py-2">
+                <span>&copy; @DateTime.Now.Year - Feuerwerk Lager</span>
+                <span class="footer-tagline">Inventur entspannt · NEM im Blick</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

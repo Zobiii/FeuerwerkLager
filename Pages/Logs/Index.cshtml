@@ -1,0 +1,36 @@
+@page
+@model FeuerwerkLager.Pages.Logs.IndexModel
+@{
+    ViewData["Title"] = "Log";
+}
+
+<div class="page-header">
+    <h2>Aktions-Log</h2>
+    <p>Alle Aktionen (Artikel, Buchungen, Reset) im Überblick.</p>
+</div>
+
+<div class="card log-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">Log-Einträge</h3>
+        <a asp-page="/Index" class="btn-secondary-custom">
+            ⬅️ Zurück zum Dashboard
+        </a>
+    </div>
+    <div class="card-body">
+        @if (Model.Lines == null || !Model.Lines.Any())
+        {
+            <div class="text-muted">
+                Noch keine Log-Einträge vorhanden.
+            </div>
+        }
+        else
+        {
+            <pre class="log-view">
+@foreach (var line in Model.Lines)
+{
+@line
+}
+            </pre>
+        }
+    </div>
+</div>

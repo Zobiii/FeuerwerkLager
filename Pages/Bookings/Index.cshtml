@@ -1,0 +1,140 @@
+@page
+@model FeuerwerkLager.Pages.Bookings.IndexModel
+@{
+    ViewData["Title"] = "Buchungen";
+}
+
+<div class="page-header">
+    <h2>Artikel buchen</h2>
+    <p>Artikel zwischen „frei“ und Lagerplätzen bzw. zwischen Lagerplätzen umbuchen.</p>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
+
+        <div class="form-grid two-columns">
+            <div class="form-group">
+                <label for="articleSelect">Artikel</label>
+                <select asp-for="SelectedArticleId" class="form-select" id="articleSelect">
+                    @foreach (var a in Model.Articles)
+                    {
+                        <option value="@a.Id">@a.Name (@a.Company)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Quantity">Menge</label>
+                <input asp-for="Quantity"
+                       class="form-control"
+                       type="number"
+                       id="quantityInput"
+                       min="1" />
+                <small id="quantityHint" class="text-muted"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="fromLocationSelect">Von (Ausgang)</label>
+                <select asp-for="FromLocationId" class="form-select" id="fromLocationSelect">
+                    <option value="">frei</option>
+                    @foreach (var l in Model.Locations)
+                    {
+                        <option value="@l.Id">@l.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Nach (Ziel)</label>
+                <select asp-for="ToLocationId" class="form-select" id="toLocationSelect">
+                    <option value="">frei</option>
+                    @foreach (var l in Model.Locations)
+                    {
+                        <option value="@l.Id">@l.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn-main">
+                🔁 Buchen
+            </button>
+            <a asp-page="/Index" class="btn-secondary-custom">
+                ⬅️ Zurück zum Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        // Map aus dem Model: "ArticleId|LocationId/free" -> Menge
+        var availability = {
+            @foreach (var kv in Model.Availability)
+            {
+                <text>"@kv.Key": @kv.Value,</text>
+            }
+        };
+
+        function updateMax() {
+            var articleSelect = document.getElementById('articleSelect');
+            var fromSelect = document.getElementById('fromLocationSelect');
+            var qtyInput = document.getElementById('quantityInput');
+            var hint = document.getElementById('quantityHint');
+
+            if (!articleSelect || !fromSelect || !qtyInput) return;
+
+            var articleId = articleSelect.value;
+            var fromLocId = fromSelect.value;
+            var key = articleId + "|" + (fromLocId === "" ? "free" : fromLocId);
+
+            var max = availability[key] || 0;
+
+            if (max > 0) {
+                qtyInput.min = 1;
+                qtyInput.max = max;
+
+                var current = parseInt(qtyInput.value || "0", 10);
+                if (isNaN(current) || current < 1) {
+                    qtyInput.value = 1;
+                } else if (current > max) {
+                    qtyInput.value = max;
+                }
+
+                qtyInput.disabled = false;
+
+                if (hint) {
+                    hint.textContent = "Maximal verfügbare Menge am Ausgang: " + max;
+                }
+            } else {
+                // Nichts verfügbar
+                qtyInput.min = 0;
+                qtyInput.max = 0;
+                qtyInput.value = 0;
+                qtyInput.disabled = false; // kann aktiv bleiben, Server blockt sowieso
+
+                if (hint) {
+                    hint.textContent = "Am gewählten Ausgang ist aktuell keine Menge verfügbar.";
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var articleSelect = document.getElementById('articleSelect');
+            var fromSelect = document.getElementById('fromLocationSelect');
+
+            if (articleSelect) {
+                articleSelect.addEventListener('change', updateMax);
+            }
+            if (fromSelect) {
+                fromSelect.addEventListener('change', updateMax);
+            }
+
+            updateMax();
+        });
+    })();
+</script>
+}

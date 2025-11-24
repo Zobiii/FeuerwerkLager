@@ -1,0 +1,165 @@
+﻿@page
+@model FeuerwerkLager.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Übersicht über Artikel, Lagerplätze, NEM und Einzelteile.</p>
+</div>
+
+<!-- Summary-Karten oben -->
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="summary-label">Artikel</div>
+        <div class="summary-value">@Model.TotalArticleCount</div>
+        <div class="summary-sub">verschiedene Feuerwerksartikel im System</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-label">Lagerplätze</div>
+        <div class="summary-value">@Model.TotalLocationCount</div>
+        <div class="summary-sub">Karton / Lagerpositionen</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-label">NEM gesamt</div>
+        <div class="summary-value">@Model.TotalNemAll.ToString("0.##")</div>
+        <div class="summary-sub">Summe aller NEM (über alle Lagerplätze)</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-label">Einzelteile gesamt</div>
+        <div class="summary-value">@Model.TotalPiecesAll</div>
+        <div class="summary-sub">aus allen Multi-Part-Artikeln</div>
+    </div>
+</div>
+
+<!-- Filterleiste -->
+<div class="card filter-card mb-3">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <div class="form-group">
+                <label asp-for="SearchTerm">Suche</label>
+                <input asp-for="SearchTerm" class="form-control" placeholder="Artikel, Firma, Produktnummer, Kategorie..." />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FilterLocationId">Lagerplatz</label>
+                <select asp-for="FilterLocationId" class="form-select">
+                    <option value="">Alle</option>
+                    @foreach (var loc in Model.Locations)
+                    {
+                        <option value="@loc.Id">@loc.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="OnlyFree">Nur freie Bestände</label><br />
+                <input asp-for="OnlyFree" type="checkbox" />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn-main">
+                    🔍 Filtern
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Quick-Actions -->
+<div class="toolbar">
+    <a asp-page="/Articles/Create" class="btn-main">
+        ➕ Artikel erstellen
+    </a>
+    <a asp-page="/Bookings/Index" class="btn-secondary-custom">
+        🔁 Buchen
+    </a>
+    <a asp-page="/Stock/Add" class="btn-secondary-custom">
+        ➕ Bestand erhöhen
+    </a>
+    <a asp-page="/Inventory/Set" class="btn-secondary-custom">
+        📋 Inventur
+    </a>
+    <a asp-page="/Locations/Index" class="btn-secondary-custom">
+        📦 Lagerplätze
+    </a>
+    <a asp-page="/Reports/NemOverview" class="btn-secondary-custom">
+        📊 NEM-Übersicht
+    </a>
+    <a asp-page="/Logs/Index" class="btn-secondary-custom">
+        📄 Log ansehen
+    </a>
+    <a asp-page="/Admin/Index" class="btn-danger-custom">
+        ⚠️ Admin / Reset
+    </a>
+</div>
+
+<!-- Bestands-Tabelle -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title mb-0">Bestandsübersicht</h2>
+        <span class="badge bg-secondary">Positionen (gefiltert): @Model.Stock.Count</span>
+    </div>
+    <div class="card-body table-wrapper">
+        <table class="table table-sm custom-table">
+            <thead>
+                <tr>
+                    <th>Artikel</th>
+                    <th>Kategorie</th>
+                    <th>Produktnummer</th>
+                    <th>Firma</th>
+                    <th>Lagerplatz</th>
+                    <th class="text-end">Menge</th>
+                    <th class="text-end">Einzelteile</th>
+                    <th class="text-end">NEM gesamt</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Stock.Any())
+            {
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Noch keine Artikel oder Bestände vorhanden oder Filter liefert keine Treffer.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var row in Model.Stock)
+                {
+                    <tr>
+                        <td>@row.ArticleName</td>
+                        <td>@row.Category</td>
+                        <td>@row.ProductNumber</td>
+                        <td>@row.Company</td>
+                        <td>
+                            @if (row.IsFree)
+                            {
+                                <span class="badge-free">frei</span>
+                            }
+                            else
+                            {
+                                <span class="badge-location">@row.LocationName</span>
+                            }
+                        </td>
+                        <td class="text-end">@row.Quantity</td>
+                        <td class="text-end">
+                            @if (row.TotalPieces.HasValue)
+                            {
+                                @row.TotalPieces.Value
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (row.TotalNEM.HasValue)
+                            {
+                                @row.TotalNEM.Value.ToString("0.##")
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

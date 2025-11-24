@@ -1,0 +1,103 @@
+@page "{id:int}"
+@model FeuerwerkLager.Pages.Locations.DetailsModel
+@{
+    ViewData["Title"] = "Lagerplatz Details";
+}
+
+@if (Model.Location == null)
+{
+    <p class="text-muted">Lagerplatz nicht gefunden.</p>
+}
+else
+{
+    <div class="page-header">
+        <h2>Lagerplatz: @Model.Location.Name</h2>
+        <p>@Model.Location.Description</p>
+    </div>
+
+    <div class="toolbar">
+        <a asp-page="/Locations/Index" class="btn-secondary-custom">
+            ⬅️ Zurück zur Lagerplatzliste
+        </a>
+        <a asp-page="/Index" class="btn-secondary-custom">
+            🏠 Dashboard
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title mb-0">Zusammenfassung</h3>
+        </div>
+        <div class="card-body">
+            <p>
+                Positionen: <strong>@Model.Items.Count</strong><br />
+                Gesamtmenge: <strong>@Model.TotalQuantity</strong><br />
+                NEM gesamt:
+                <strong>
+                    @if (Model.TotalNEM.HasValue)
+                    {
+                        @Model.TotalNEM.Value.ToString("0.##")
+                    }
+                    else
+                    {
+                        <text>n/a</text>
+                    }
+                </strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title mb-0">Bestand in diesem Lagerplatz</h3>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-sm custom-table">
+                <thead>
+                    <tr>
+                        <th>Artikel</th>
+                        <th>Firma</th>
+                        <th>Produktnummer</th>
+                        <th class="text-end">Menge</th>
+                        <th class="text-end">NEM / Stück</th>
+                        <th class="text-end">NEM gesamt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Dieser Lagerplatz ist aktuell leer.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var row in Model.Items)
+                    {
+                        <tr>
+                            <td>@row.ArticleName</td>
+                            <td>@row.Company</td>
+                            <td>@row.ProductNumber</td>
+                            <td class="text-end">@row.Quantity</td>
+                            <td class="text-end">
+                                @if (row.NemPerPiece.HasValue)
+                                {
+                                    @row.NemPerPiece.Value.ToString("0.##")
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (row.TotalNem.HasValue)
+                                {
+                                    @row.TotalNem.Value.ToString("0.##")
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,7 @@
+**/bin
+**/obj
+*.csproj.user
+.minigit/
+*.txt
+*.log
+*.db

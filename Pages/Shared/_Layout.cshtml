@@ -65,6 +65,8 @@
             <div class="nav-actions">
                 <a asp-page="/Stock/Add" class="btn-main btn-sm">Bestand +</a>
                 <a asp-page="/Bookings/Index" class="btn-secondary-custom btn-sm">Buchen</a>
+                <button type="button" class="btn-ghost btn-sm" id="toggle-lite">Lite Mode</button>
+                <button type="button" class="btn-ghost btn-sm" id="toggle-theme">Neutral</button>
             </div>
         </div>
     </header>
@@ -89,6 +91,44 @@
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const body = document.body;
+            const liteKey = 'fw-lite';
+            const themeKey = 'fw-theme';
+
+            function applyToggles() {
+                const lite = localStorage.getItem(liteKey) === '1';
+                const neutral = localStorage.getItem(themeKey) === 'neutral';
+                body.classList.toggle('lite-mode', lite);
+                body.classList.toggle('theme-neutral', neutral);
+                const liteBtn = document.getElementById('toggle-lite');
+                const themeBtn = document.getElementById('toggle-theme');
+                if (liteBtn) {
+                    liteBtn.setAttribute('aria-pressed', lite ? 'true' : 'false');
+                    liteBtn.textContent = lite ? 'Full Mode' : 'Lite Mode';
+                }
+                if (themeBtn) {
+                    themeBtn.setAttribute('aria-pressed', neutral ? 'true' : 'false');
+                    themeBtn.textContent = neutral ? 'Buntes Theme' : 'Neutral';
+                }
+            }
+
+            document.getElementById('toggle-lite')?.addEventListener('click', () => {
+                const next = localStorage.getItem(liteKey) === '1' ? '0' : '1';
+                localStorage.setItem(liteKey, next);
+                applyToggles();
+            });
+
+            document.getElementById('toggle-theme')?.addEventListener('click', () => {
+                const next = localStorage.getItem(themeKey) === 'neutral' ? 'color' : 'neutral';
+                localStorage.setItem(themeKey, next);
+                applyToggles();
+            });
+
+            applyToggles();
+        })();
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

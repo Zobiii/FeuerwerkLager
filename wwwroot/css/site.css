@@ -75,6 +75,29 @@ body::after {
     z-index: 0;
 }
 
+.lite-mode {
+    background: #0d1224 !important;
+}
+
+body.lite-mode::after {
+    display: none;
+}
+
+body.theme-neutral {
+    --accent-pink: #f5a3c5;
+    --accent-cyan: #8de0d9;
+    --accent-blue: #a7b8ff;
+    --accent-amber: #f8d479;
+    --bg-surface: rgba(255, 255, 255, 0.06);
+    --bg-surface-strong: rgba(255, 255, 255, 0.08);
+    --border-glass: rgba(255, 255, 255, 0.14);
+}
+
+body.theme-neutral::after {
+    filter: blur(40px);
+    opacity: 0.35;
+}
+
 @media (prefers-reduced-motion: reduce) {
     body::after {
         background-size: 110% 110%;
@@ -178,6 +201,18 @@ body::after {
     transform: translateY(-1px);
 }
 
+.nav-link-glass:focus-visible,
+.btn-main:focus-visible,
+.btn-secondary-custom:focus-visible,
+.btn-danger-custom:focus-visible,
+.btn-ghost:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+}
+
 .dropdown-menu-dark {
     background: rgba(15, 20, 35, 0.9);
     border: 1px solid var(--border-glass);
@@ -228,6 +263,11 @@ body::after {
     backdrop-filter: blur(var(--blur));
     box-shadow: var(--shadow-strong);
     color: var(--text-main);
+}
+
+.lite-mode .card,
+.lite-mode .form-card {
+    box-shadow: var(--shadow-soft);
 }
 
 .card {
@@ -407,6 +447,11 @@ body::after {
     margin-bottom: 0;
 }
 
+.hint-text {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -536,6 +581,12 @@ select option:checked {
 .custom-table td {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .custom-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
 }
 
 .badge-free,
@@ -892,6 +943,26 @@ a:hover {
 @media (max-width: 576px) {
     .form-card {
         padding: 1.1rem 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .summary-grid {
+        gap: 0.7rem;
+    }
+
+    .card-body,
+    .form-card {
+        padding: 1rem;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-bar .form-group {
+        width: 100%;
     }
 }
 

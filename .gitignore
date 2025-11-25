@@ -5,3 +5,5 @@
 *.txt
 *.log
 *.db
+*.db-shm
+*.db-wal

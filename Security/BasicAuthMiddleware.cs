@@ -26,15 +26,19 @@ public class BasicAuthMiddleware
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue("Authorization", out var headerValues) ||
-            headerValues.Count == 0 ||
-            !headerValues[0].StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        if (!context.Request.Headers.TryGetValue("Authorization", out var headerValues))
         {
             await ChallengeAsync(context);
             return;
         }
 
-        var header = headerValues[0];
+        var header = headerValues.Count > 0 ? headerValues[0] : null;
+        if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        {
+            await ChallengeAsync(context);
+            return;
+        }
+
         var encoded = header.Substring("Basic ".Length).Trim();
         string decoded;
 

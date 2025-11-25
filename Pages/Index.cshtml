@@ -1,15 +1,17 @@
-﻿@page
+@page
 @model FeuerwerkLager.Pages.IndexModel
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="page-header">
-    <h1>Dashboard</h1>
-    <p>Übersicht über Artikel, Lagerplätze, NEM und Einzelteile.</p>
-</div>
+<section class="dashboard-hero glow-panel">
+    <div class="hero-copy">
+        <div class="hero-pill">Control Center</div>
+        <h1>Realtime Lagerstatus</h1>
+        <p>Alle Artikel, Kartons und Buchungen auf einen Blick. Plane den n&auml;chsten Schritt mit klaren Insights.</p>
+    </div>
+</section>
 
-<!-- Summary-Karten oben -->
 <div class="summary-grid">
     <div class="summary-card">
         <div class="summary-label">Artikel</div>
@@ -17,14 +19,14 @@
         <div class="summary-sub">verschiedene Feuerwerksartikel im System</div>
     </div>
     <div class="summary-card">
-        <div class="summary-label">Lagerplätze</div>
+        <div class="summary-label">Lagerpl&auml;tze</div>
         <div class="summary-value">@Model.TotalLocationCount</div>
         <div class="summary-sub">Karton / Lagerpositionen</div>
     </div>
     <div class="summary-card">
         <div class="summary-label">NEM gesamt</div>
         <div class="summary-value">@Model.TotalNemAll.ToString("0.##")</div>
-        <div class="summary-sub">Summe aller NEM (über alle Lagerplätze)</div>
+        <div class="summary-sub">Summe aller NEM (&uuml;ber alle Lagerpl&auml;tze)</div>
     </div>
     <div class="summary-card">
         <div class="summary-label">Einzelteile gesamt</div>
@@ -33,7 +35,6 @@
     </div>
 </div>
 
-<!-- Filterleiste -->
 <div class="card filter-card mb-3">
     <div class="card-body">
         <form method="get" class="filter-bar">
@@ -54,52 +55,27 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="OnlyFree">Nur freie Bestände</label><br />
+                <label asp-for="OnlyFree">Nur freie Best&auml;nde</label><br />
                 <input asp-for="OnlyFree" type="checkbox" />
             </div>
 
             <div class="form-group">
                 <button type="submit" class="btn-main">
-                    🔍 Filtern
+                    Filter anwenden
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Quick-Actions -->
-<div class="toolbar">
-    <a asp-page="/Articles/Create" class="btn-main">
-        ➕ Artikel erstellen
-    </a>
-    <a asp-page="/Bookings/Index" class="btn-secondary-custom">
-        🔁 Buchen
-    </a>
-    <a asp-page="/Stock/Add" class="btn-secondary-custom">
-        ➕ Bestand erhöhen
-    </a>
-    <a asp-page="/Inventory/Set" class="btn-secondary-custom">
-        📋 Inventur
-    </a>
-    <a asp-page="/Locations/Index" class="btn-secondary-custom">
-        📦 Lagerplätze
-    </a>
-    <a asp-page="/Reports/NemOverview" class="btn-secondary-custom">
-        📊 NEM-Übersicht
-    </a>
-    <a asp-page="/Logs/Index" class="btn-secondary-custom">
-        📄 Log ansehen
-    </a>
-    <a asp-page="/Admin/Index" class="btn-danger-custom">
-        ⚠️ Admin / Reset
-    </a>
-</div>
 
-<!-- Bestands-Tabelle -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="card-title mb-0">Bestandsübersicht</h2>
-        <span class="badge bg-secondary">Positionen (gefiltert): @Model.Stock.Count</span>
+    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+        <div>
+            <h2 class="card-title mb-0">Bestands&uuml;bersicht</h2>
+            <small class="text-muted">Live Datenquelle aus dem FireworksContext</small>
+        </div>
+        <span class="badge bg-secondary soft-badge">Positionen (gefiltert): @Model.Stock.Count</span>
     </div>
     <div class="card-body table-wrapper">
         <table class="table table-sm custom-table">
@@ -120,7 +96,7 @@
             {
                 <tr>
                     <td colspan="8" class="text-center py-4 text-muted">
-                        Noch keine Artikel oder Bestände vorhanden oder Filter liefert keine Treffer.
+                        Noch keine Artikel oder Best&auml;nde vorhanden oder Filter liefert keine Treffer.
                     </td>
                 </tr>
             }

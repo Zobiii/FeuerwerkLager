@@ -1,59 +1,127 @@
 @page
 @model FeuerwerkLager.Pages.Stock.AddModel
 @{
-    ViewData["Title"] = "Bestand erhöhen";
+    ViewData["Title"] = "Bestand erh&ouml;hen";
 }
 
-<div class="page-header">
-    <h2>Bestand erhöhen (Inventur)</h2>
-    <p>Gefundene zusätzliche Stückzahlen einem bestehenden Artikel zuordnen.</p>
+<div class="page-hero glow-panel">
+    <div class="hero-pill">Inventur &middot; Quick Update</div>
+    <h2>Bestand auffrischen</h2>
+    <p>Versehentlich gefundene Mengen lassen sich hier elegant und sicher einem Artikel zuordnen.</p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <span class="label">Artikel im System</span>
+            <span class="value">@Model.Articles.Count</span>
+        </div>
+        <div class="hero-stat">
+            <span class="label">Lagerpl&auml;tze</span>
+            <span class="value">@Model.Locations.Count</span>
+        </div>
+        <div class="hero-stat">
+            <span class="label">Status</span>
+            <span class="value text-success">bereit</span>
+        </div>
+    </div>
 </div>
 
-<div class="form-card">
-    <form method="post">
-        <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
-
-        <div class="form-grid two-columns">
-            <div class="form-group">
-                <label for="articleSelect">Artikel</label>
-                <select asp-for="SelectedArticleId" class="form-control" id="articleSelect">
-                    @foreach (var a in Model.Articles)
-                    {
-                        <option value="@a.Id">@a.Name (@a.Company)</option>
-                    }
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="QuantityToAdd">Zusätzliche Menge (Inventurfund)</label>
-                <input asp-for="QuantityToAdd" class="form-control" type="number" min="1" />
-            </div>
-
-            <div class="form-group">
-                <label>Lagerplatz, wo der Artikel liegt</label>
-                <select asp-for="SelectedLocationId" class="form-control">
-                    <option value="">frei (noch in keiner Box)</option>
-                    @foreach (var l in Model.Locations)
-                    {
-                        <option value="@l.Id">@l.Name</option>
-                    }
-                </select>
-            </div>
+<div class="page-layout-split">
+    <section class="form-card form-flow-card">
+        <div class="form-flow-header">
+            <h3>Neue Menge buchen</h3>
+            <p>Schnell eintragen, automatisch protokolliert.</p>
         </div>
 
-        <p class="mt-2 text-muted" style="font-size:0.85rem;">
-            Wichtig: Wenn du die Menge in einem bestimmten Karton (z.B. <strong>KT01</strong>) erhöhen willst,
-            wähle hier genau diesen Lagerplatz. Nur wenn du die Auswahl auf <strong>„frei“</strong> lässt,
-            wird die zusätzliche Menge als freie Menge erfasst.
-        </p>
+        <form method="post" class="form-flow">
+            <div asp-validation-summary="All" class="validation-summary-errors mb-3"></div>
 
-        <div class="mt-3 d-flex gap-2">
-            <button type="submit" class="btn-main">
-                ➕ Bestand erhöhen
-            </button>
-            <a asp-page="/Index" class="btn-secondary-custom">
-                ⬅️ Zurück zum Dashboard
-            </a>
+            <div class="form-flow-step">
+                <div class="step-badge">1</div>
+                <div class="step-content">
+                    <p class="step-title">Artikel ausw&auml;hlen</p>
+                    <div class="form-group">
+                        <label for="articleSelect">Artikel</label>
+                        <select asp-for="SelectedArticleId" class="form-control" id="articleSelect">
+                            <option value="">Bitte ausw&auml;hlen</option>
+                            @foreach (var a in Model.Articles)
+                            {
+                                <option value="@a.Id">@a.Name (@a.Company)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-flow-step">
+                <div class="step-badge">2</div>
+                <div class="step-content">
+                    <p class="step-title">Inventurfund erfassen</p>
+                    <div class="form-grid two-columns">
+                        <div class="form-group">
+                            <label asp-for="QuantityToAdd">Zus&auml;tzliche Menge</label>
+                            <input asp-for="QuantityToAdd" class="form-control highlight-input" type="number" min="1" placeholder="z.B. 12" />
+                        </div>
+                        <div class="form-group">
+                            <label>Lagerplatz (optional)</label>
+                            <select asp-for="SelectedLocationId" class="form-control">
+                                <option value="">frei (noch in keiner Box)</option>
+                                @foreach (var l in Model.Locations)
+                                {
+                                    <option value="@l.Id">@l.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <p class="step-hint">
+                        Tipp: Lagerplatz nur setzen, wenn du den Fund direkt einem Karton wie <strong>KT01</strong> zuordnest.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-flow-actions">
+                <button type="submit" class="btn-main">
+                    Bestand aktualisieren
+                </button>
+                <a asp-page="/Index" class="btn-ghost">
+                    Zur&uuml;ck zum Dashboard
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <aside class="side-panel">
+        <div class="side-panel-card">
+            <div class="side-panel-header">
+                <span class="panel-label">Workflow</span>
+                <h4>Inventur Checkliste</h4>
+            </div>
+            <ul class="panel-list">
+                <li>
+                    <span class="dot dot-pink"></span>
+                    Fundmenge nochmal z&auml;hlen.
+                </li>
+                <li>
+                    <span class="dot dot-teal"></span>
+                    Artikelbezeichnung pr&uuml;fen.
+                </li>
+                <li>
+                    <span class="dot dot-indigo"></span>
+                    Lagerplatz oder &bdquo;frei&ldquo; w&auml;hlen.
+                </li>
+                <li>
+                    <span class="dot dot-amber"></span>
+                    Buchung absenden &ndash; Log erstellt sich automatisch.
+                </li>
+            </ul>
         </div>
-    </form>
+
+        <div class="side-panel-card soft-card">
+            <p class="panel-label">Pro Tipp</p>
+            <p class="panel-copy">
+                Je konsistenter die Lagerpl&auml;tze gepflegt werden, desto schneller findest du freie Slots f&uuml;r die n&auml;chste Lieferung.
+            </p>
+            <p class="panel-note">
+                Jede Buchung wird mit Zeitstempel im Log festgehalten und kann jederzeit nachvollzogen werden.
+            </p>
+        </div>
+    </aside>
 </div>

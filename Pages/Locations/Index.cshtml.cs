@@ -38,34 +38,13 @@ public class IndexModel : PageModel
         Locations = locations.Select(l =>
         {
             var locEntries = entries.Where(e => e.LocationId == l.Id).ToList();
-            var totalPieces = locEntries.Sum(e =>
-            {
-                var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
-                    ? e.Article.PiecesPerUnit.Value
-                    : 1;
-                return (e.FullUnits * perUnit) + e.LoosePieces;
-            });
+            var totalPieces = locEntries.Sum(Models.StockMath.TotalPieces);
             double? totalNem = null;
 
             var anyNem = locEntries.Any(e => e.Article.NEM.HasValue);
             if (anyNem)
             {
-                totalNem = locEntries.Sum(e =>
-                {
-                    if (!e.Article.NEM.HasValue)
-                        return 0.0;
-
-                    var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
-                        ? e.Article.PiecesPerUnit.Value
-                        : 1;
-
-                    var totalPiecesForEntry = (e.FullUnits * perUnit) + e.LoosePieces;
-                    var nemPerPiece = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0
-                        ? e.Article.NEM.Value / e.Article.PiecesPerUnit.Value
-                        : e.Article.NEM.Value;
-
-                    return nemPerPiece * totalPiecesForEntry;
-                });
+                totalNem = locEntries.Sum(e => Models.StockMath.TotalNem(e) ?? 0.0);
             }
 
             return new LocationRow

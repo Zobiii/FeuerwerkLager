@@ -54,13 +54,7 @@ public class DeleteModel : PageModel
             .Where(s => s.ArticleId == SelectedArticleId)
             .ToListAsync();
 
-        var totalPieces = stockEntries.Sum(s =>
-        {
-            var perUnit = (s.Article.IsMultiPart && s.Article.PiecesPerUnit.HasValue && s.Article.PiecesPerUnit.Value > 0)
-                ? s.Article.PiecesPerUnit.Value
-                : 1;
-            return (s.FullUnits * perUnit) + s.LoosePieces;
-        });
+        var totalPieces = stockEntries.Sum(StockMath.TotalPieces);
         var positionCount = stockEntries.Count;
 
         _context.StockEntries.RemoveRange(stockEntries);

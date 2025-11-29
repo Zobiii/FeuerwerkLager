@@ -54,29 +54,8 @@ public class NemOverviewModel : PageModel
             }
 
             var posCount = g.Count();
-            var totalPieces = g.Sum(e =>
-            {
-                var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
-                    ? e.Article.PiecesPerUnit.Value
-                    : 1;
-                return (e.FullUnits * perUnit) + e.LoosePieces;
-            });
-            var totalNem = g.Sum(e =>
-            {
-                if (!e.Article.NEM.HasValue)
-                    return 0.0;
-
-                var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
-                    ? e.Article.PiecesPerUnit.Value
-                    : 1;
-
-                var totalPieces = (e.FullUnits * perUnit) + e.LoosePieces;
-                var nemPerPiece = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0
-                    ? e.Article.NEM.Value / e.Article.PiecesPerUnit.Value
-                    : e.Article.NEM.Value; // f\u00fcr nicht-multipart gilt NEM pro Einheit
-
-                return nemPerPiece * totalPieces;
-            });
+            var totalPieces = g.Sum(Models.StockMath.TotalPieces);
+            var totalNem = g.Sum(e => Models.StockMath.TotalNem(e) ?? 0.0);
 
             Rows.Add(new NemRow
             {

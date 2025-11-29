@@ -65,17 +65,15 @@ public class DetailsModel : PageModel
                 ? e.Article.PiecesPerUnit.Value
                 : 1;
 
-            var totalPieces = (e.FullUnits * perUnit) + e.LoosePieces;
+            var totalPieces = Models.StockMath.TotalPieces(e);
 
-            double? totalNem = null;
+            double? totalNem = Models.StockMath.TotalNem(e);
             double? nemPerPiece = null;
-
             if (e.Article.NEM.HasValue)
             {
                 nemPerPiece = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0
-                    ? e.Article.NEM.Value / e.Article.PiecesPerUnit.Value
+                    ? e.Article.NEM.Value / perUnit
                     : e.Article.NEM.Value;
-                totalNem = nemPerPiece * totalPieces;
             }
 
             return new LocationItemRow

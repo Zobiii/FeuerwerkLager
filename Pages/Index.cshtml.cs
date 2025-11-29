@@ -71,10 +71,10 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         TotalStockPositionsAll = allEntries.Count;
-        TotalNemAll = allEntries.Sum(e => CalculateTotalNem(e) ?? 0.0);
+        TotalNemAll = allEntries.Sum(e => Models.StockMath.TotalNem(e) ?? 0.0);
         TotalPiecesAll = allEntries
             .Where(e => e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
-            .Sum(e => e.FullUnits * e.Article.PiecesPerUnit!.Value + e.LoosePieces);
+            .Sum(e => Models.StockMath.TotalPieces(e));
 
         // Filter-Lookup
         Locations = await _context.Locations
@@ -123,7 +123,7 @@ public class IndexModel : PageModel
             int? totalPieces = null;
             if (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
             {
-                totalPieces = (e.FullUnits * e.Article.PiecesPerUnit.Value) + e.LoosePieces;
+                totalPieces = Models.StockMath.TotalPieces(e);
             }
 
             return new StockRow
@@ -136,29 +136,11 @@ public class IndexModel : PageModel
                 LocationName = e.Location != null ? e.Location.Name : "frei",
                 FullUnits = e.FullUnits,
                 LoosePieces = e.LoosePieces,
-                TotalNEM = CalculateTotalNem(e),
+                TotalNEM = Models.StockMath.TotalNem(e),
                 IsMultiPart = e.Article.IsMultiPart,
                 PiecesPerUnit = e.Article.PiecesPerUnit,
                 TotalPieces = totalPieces
             };
         }).ToList();
-
-        double? CalculateTotalNem(Models.StockEntry entry)
-        {
-            if (!entry.Article.NEM.HasValue)
-            {
-                return null;
-            }
-
-            if (entry.Article.IsMultiPart && entry.Article.PiecesPerUnit.HasValue)
-            {
-                var perPieceNem = entry.Article.NEM.Value / entry.Article.PiecesPerUnit.Value;
-                var pieces = (entry.FullUnits * entry.Article.PiecesPerUnit.Value) + entry.LoosePieces;
-                return perPieceNem * pieces;
-            }
-
-            // nicht multipart -> NEM pro Einheit
-            return entry.Article.NEM.Value * (entry.FullUnits + entry.LoosePieces);
-        }
     }
 }

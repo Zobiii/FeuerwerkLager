@@ -1,4 +1,5 @@
 using FeuerwerkLager.Logs;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace FeuerwerkLager.Pages.Logs;

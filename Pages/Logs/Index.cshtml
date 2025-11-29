@@ -40,7 +40,7 @@
         else
         {
             <div class="small text-muted mb-2">Zeigt die letzten @Model.Lines.Length Zeilen (neueste zuerst).</div>
-            <div class="log-view">
+            <div class="log-view log-view-readable">
                 <ol class="mb-0">
                 @foreach (var line in Model.Lines)
                 {
@@ -51,3 +51,25 @@
         }
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .log-view-readable {
+            background: rgba(10, 16, 32, 0.9);
+            color: #e6edff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.6rem;
+            padding: 0.8rem 1rem;
+        }
+
+        .log-view-readable ol {
+            padding-left: 1.25rem;
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .log-view-readable li {
+            color: #d8e2ff;
+        }
+    </style>
+}

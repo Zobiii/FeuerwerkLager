@@ -13,10 +13,24 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">Log-Einträge</h3>
         <a asp-page="/Index" class="btn-secondary-custom">
-            ⬅️ Zurück zum Dashboard
+            Zurück zum Dashboard
         </a>
     </div>
     <div class="card-body">
+        <form method="get" class="filter-bar mb-3">
+            <div class="form-group">
+                <label for="limitInput">Zeilen</label>
+                <input id="limitInput" name="Limit" type="number" min="1" max="2000" value="@Model.Limit" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label for="containsInput">Filter (Text)</label>
+                <input id="containsInput" name="Contains" value="@Model.Contains" class="form-control" placeholder="z.B. Artikel, Lagerplatz, Reset" />
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn-main">Anwenden</button>
+            </div>
+        </form>
+
         @if (Model.Lines == null || !Model.Lines.Any())
         {
             <div class="text-muted">
@@ -25,12 +39,15 @@
         }
         else
         {
-            <pre class="log-view">
-@foreach (var line in Model.Lines)
-{
-@line
-}
-            </pre>
+            <div class="small text-muted mb-2">Zeigt die letzten @Model.Lines.Length Zeilen (neueste zuerst).</div>
+            <div class="log-view">
+                <ol class="mb-0">
+                @foreach (var line in Model.Lines)
+                {
+                    <li>@line</li>
+                }
+                </ol>
+            </div>
         }
     </div>
 </div>

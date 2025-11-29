@@ -22,7 +22,5 @@ public class StockEntry
     /// Gesamt-Stückzahl: volle Einheiten + lose Stücke.
     /// Bei nicht-multipart Artikeln entspricht das der Stückzahl; lose Teile sollten dort 0 sein.
     /// </summary>
-    public int TotalPieces => Article != null && Article.IsMultiPart && Article.PiecesPerUnit.HasValue
-        ? (FullUnits * Article.PiecesPerUnit.Value) + LoosePieces
-        : FullUnits + LoosePieces;
+    public int TotalPieces => StockMath.TotalPieces(this);
 }

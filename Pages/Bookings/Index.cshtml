@@ -6,7 +6,7 @@
 
 <div class="page-header">
     <h2>Artikel buchen</h2>
-    <p>Artikel zwischen „frei“ und Lagerplätzen bzw. zwischen Lagerplätzen umbuchen.</p>
+    <p>Artikel zwischen "frei" und Lagerplätzen bzw. zwischen Lagerplätzen umbuchen.</p>
 </div>
 
 <div class="form-card">
@@ -25,12 +25,21 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Quantity">Menge</label>
-                <input asp-for="Quantity"
+                <label asp-for="FullUnitsToMove">Volle Einheiten</label>
+                <input asp-for="FullUnitsToMove"
                        class="form-control"
                        type="number"
-                       id="quantityInput"
-                       min="1" />
+                       id="fullUnitsInput"
+                       min="0" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LoosePiecesToMove">Lose Einzelteile</label>
+                <input asp-for="LoosePiecesToMove"
+                       class="form-control"
+                       type="number"
+                       id="loosePiecesInput"
+                       min="0" />
                 <small id="quantityHint" class="text-muted"></small>
             </div>
 
@@ -59,10 +68,10 @@
 
         <div class="mt-3 d-flex gap-2">
             <button type="submit" class="btn-main">
-                🔁 Buchen
+                Buchen
             </button>
             <a asp-page="/Index" class="btn-secondary-custom">
-                ⬅️ Zurück zum Dashboard
+                Zurück zum Dashboard
             </a>
         </div>
     </form>
@@ -71,54 +80,54 @@
 @section Scripts {
 <script>
     (function () {
-        // Map aus dem Model: "ArticleId|LocationId/free" -> Menge
+        // Map aus dem Model: "ArticleId|LocationId/free" -> verfügbare Stücke
         var availability = {
-            @foreach (var kv in Model.Availability)
+            @foreach (var kv in Model.AvailabilityPieces)
             {
                 <text>"@kv.Key": @kv.Value,</text>
             }
         };
 
-        function updateMax() {
+        // Map: ArticleId -> Stücke pro Einheit (1, wenn kein Multipart)
+        var perUnitMap = {
+            @foreach (var kv in Model.PiecesPerUnitMap)
+            {
+                <text>"@kv.Key": @kv.Value,</text>
+            }
+        };
+
+        function updateHint() {
             var articleSelect = document.getElementById('articleSelect');
             var fromSelect = document.getElementById('fromLocationSelect');
-            var qtyInput = document.getElementById('quantityInput');
             var hint = document.getElementById('quantityHint');
+            var fullInput = document.getElementById('fullUnitsInput');
+            var looseInput = document.getElementById('loosePiecesInput');
 
-            if (!articleSelect || !fromSelect || !qtyInput) return;
+            if (!articleSelect || !fromSelect || !hint) return;
 
             var articleId = articleSelect.value;
             var fromLocId = fromSelect.value;
             var key = articleId + "|" + (fromLocId === "" ? "free" : fromLocId);
 
-            var max = availability[key] || 0;
+            var maxPieces = availability[key] || 0;
+            var perUnit = perUnitMap[articleId] || 1;
 
-            if (max > 0) {
-                qtyInput.min = 1;
-                qtyInput.max = max;
+            var maxFull = Math.floor(maxPieces / perUnit);
+            var maxLoose = maxPieces % perUnit;
 
-                var current = parseInt(qtyInput.value || "0", 10);
-                if (isNaN(current) || current < 1) {
-                    qtyInput.value = 1;
-                } else if (current > max) {
-                    qtyInput.value = max;
-                }
+            if (fullInput) {
+                fullInput.min = 0;
+                fullInput.max = maxFull;
+            }
+            if (looseInput) {
+                looseInput.min = 0;
+                looseInput.max = perUnit > 0 ? perUnit - 1 : 0;
+            }
 
-                qtyInput.disabled = false;
-
-                if (hint) {
-                    hint.textContent = "Maximal verfügbare Menge am Ausgang: " + max;
-                }
+            if (maxPieces > 0) {
+                hint.textContent = "Verfügbar: " + maxPieces + " Stück (" + maxFull + " volle, " + maxLoose + " lose).";
             } else {
-                // Nichts verfügbar
-                qtyInput.min = 0;
-                qtyInput.max = 0;
-                qtyInput.value = 0;
-                qtyInput.disabled = false; // kann aktiv bleiben, Server blockt sowieso
-
-                if (hint) {
-                    hint.textContent = "Am gewählten Ausgang ist aktuell keine Menge verfügbar.";
-                }
+                hint.textContent = "Am gewählten Ausgang ist aktuell keine Menge verfügbar.";
             }
         }
 
@@ -127,13 +136,13 @@
             var fromSelect = document.getElementById('fromLocationSelect');
 
             if (articleSelect) {
-                articleSelect.addEventListener('change', updateMax);
+                articleSelect.addEventListener('change', updateHint);
             }
             if (fromSelect) {
-                fromSelect.addEventListener('change', updateMax);
+                fromSelect.addEventListener('change', updateHint);
             }
 
-            updateMax();
+            updateHint();
         });
     })();
 </script>

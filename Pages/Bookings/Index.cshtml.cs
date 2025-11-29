@@ -19,8 +19,11 @@ public class IndexModel : PageModel
     public List<Article> Articles { get; set; } = new();
     public List<Location> Locations { get; set; } = new();
 
-    // Map: "ArticleId|LocationId/free" -> verfügbare Menge
-    public Dictionary<string, int> Availability { get; set; } = new();
+    // Map: "ArticleId|LocationId/free" -> verf\u00fcgbare St\u00fcckzahl (immer in St\u00fccken gerechnet)
+    public Dictionary<string, int> AvailabilityPieces { get; set; } = new();
+
+    // Map: ArticleId -> St\u00fccke pro Einheit (1, wenn kein Multipart)
+    public Dictionary<int, int> PiecesPerUnitMap { get; set; } = new();
 
     [BindProperty]
     public int SelectedArticleId { get; set; }
@@ -32,7 +35,10 @@ public class IndexModel : PageModel
     public int? ToLocationId { get; set; }    // null = frei
 
     [BindProperty]
-    public int Quantity { get; set; }
+    public int FullUnitsToMove { get; set; }
+
+    [BindProperty]
+    public int LoosePiecesToMove { get; set; }
 
     public async Task OnGetAsync()
     {
@@ -48,24 +54,39 @@ public class IndexModel : PageModel
             .OrderBy(a => a.Name)
             .ToListAsync();
 
+        PiecesPerUnitMap = Articles.ToDictionary(
+            a => a.Id,
+            a => (a.IsMultiPart && a.PiecesPerUnit.HasValue && a.PiecesPerUnit.Value > 0)
+                ? a.PiecesPerUnit.Value
+                : 1);
+
         Locations = await _context.Locations
             .OrderBy(l => l.Name)
             .ToListAsync();
 
-        var entries = await _context.StockEntries.ToListAsync();
+        var entries = await _context.StockEntries
+            .Include(e => e.Article)
+            .ToListAsync();
 
-        Availability = entries
+        AvailabilityPieces = entries
             .GroupBy(e => new { e.ArticleId, e.LocationId })
             .ToDictionary(
                 g => BuildKey(g.Key.ArticleId, g.Key.LocationId),
-                g => g.Sum(e => e.Quantity)
+                g =>
+                {
+                    var sampleArticle = g.First().Article;
+                    var perUnit = (sampleArticle.IsMultiPart && sampleArticle.PiecesPerUnit.HasValue && sampleArticle.PiecesPerUnit.Value > 0)
+                        ? sampleArticle.PiecesPerUnit.Value
+                        : 1;
+                    return g.Sum(e => (e.FullUnits * perUnit) + e.LoosePieces);
+                }
             );
     }
 
-    private int GetAvailableQuantity(int articleId, int? fromLocationId)
+    private int GetAvailablePieces(int articleId, int? fromLocationId)
     {
         var key = BuildKey(articleId, fromLocationId);
-        return Availability.TryGetValue(key, out var qty) ? qty : 0;
+        return AvailabilityPieces.TryGetValue(key, out var qty) ? qty : 0;
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -74,17 +95,12 @@ public class IndexModel : PageModel
 
         if (SelectedArticleId <= 0)
         {
-            ModelState.AddModelError(string.Empty, "Bitte einen Artikel auswählen.");
-        }
-
-        if (Quantity <= 0)
-        {
-            ModelState.AddModelError(string.Empty, "Menge muss größer 0 sein.");
+            ModelState.AddModelError(string.Empty, "Bitte einen Artikel ausw\u00e4hlen.");
         }
 
         if (FromLocationId == ToLocationId)
         {
-            ModelState.AddModelError(string.Empty, "Ausgang und Ziel dürfen nicht identisch sein.");
+            ModelState.AddModelError(string.Empty, "Ausgang und Ziel d\u00fcrfen nicht identisch sein.");
         }
 
         if (FromLocationId.HasValue)
@@ -92,7 +108,7 @@ public class IndexModel : PageModel
             var fromExists = await _context.Locations.AnyAsync(l => l.Id == FromLocationId.Value);
             if (!fromExists)
             {
-                ModelState.AddModelError(string.Empty, "Der gewählte Ausgang existiert nicht.");
+                ModelState.AddModelError(string.Empty, "Der gew\u00e4hlte Ausgang existiert nicht.");
             }
         }
 
@@ -101,20 +117,8 @@ public class IndexModel : PageModel
             var toExists = await _context.Locations.AnyAsync(l => l.Id == ToLocationId.Value);
             if (!toExists)
             {
-                ModelState.AddModelError(string.Empty, "Das gewählte Ziel existiert nicht.");
+                ModelState.AddModelError(string.Empty, "Das gew\u00e4hlte Ziel existiert nicht.");
             }
-        }
-
-        var available = GetAvailableQuantity(SelectedArticleId, FromLocationId);
-        if (Quantity > available)
-        {
-            ModelState.AddModelError(string.Empty,
-                $"Es sind nur {available} Stück am gewählten Ausgang verfügbar.");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return Page();
         }
 
         var article = await _context.Articles.FindAsync(SelectedArticleId);
@@ -124,22 +128,72 @@ public class IndexModel : PageModel
             return Page();
         }
 
+        var perUnit = (article.IsMultiPart && article.PiecesPerUnit.HasValue && article.PiecesPerUnit.Value > 0)
+            ? article.PiecesPerUnit.Value
+            : 1;
+
+        if (FullUnitsToMove < 0 || LoosePiecesToMove < 0)
+        {
+            ModelState.AddModelError(string.Empty, "Mengen d\u00fcrfen nicht negativ sein.");
+        }
+
+        if (FullUnitsToMove == 0 && LoosePiecesToMove == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Bitte eine Menge zum Buchen angeben.");
+        }
+
+        if (!article.IsMultiPart || !article.PiecesPerUnit.HasValue)
+        {
+            if (LoosePiecesToMove > 0)
+            {
+                ModelState.AddModelError(string.Empty, "Lose Einzelteile sind bei diesem Artikel nicht vorgesehen.");
+            }
+        }
+        else
+        {
+            if (LoosePiecesToMove >= perUnit)
+            {
+                ModelState.AddModelError(string.Empty, $"Lose Einzelteile m\u00fcssen kleiner als {perUnit} sein.");
+            }
+        }
+
+        var requestedPieces = (FullUnitsToMove * perUnit) + LoosePiecesToMove;
+
+        var available = GetAvailablePieces(SelectedArticleId, FromLocationId);
+        if (requestedPieces > available)
+        {
+            ModelState.AddModelError(string.Empty,
+                $"Es sind nur {available} St\u00fcck am gew\u00e4hlten Ausgang verf\u00fcgbar.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+
         // Ausgang-Bestand anpassen
         var fromEntry = await _context.StockEntries
             .FirstOrDefaultAsync(s =>
                 s.ArticleId == SelectedArticleId &&
                 s.LocationId == FromLocationId);
 
-        if (fromEntry == null || fromEntry.Quantity < Quantity)
+        if (fromEntry == null)
         {
             ModelState.AddModelError(string.Empty, "Fehler beim Lesen des Bestands am Ausgang.");
             return Page();
         }
 
-        fromEntry.Quantity -= Quantity;
-        if (fromEntry.Quantity == 0)
+        var fromPieces = (fromEntry.FullUnits * perUnit) + fromEntry.LoosePieces;
+        fromPieces -= requestedPieces;
+
+        if (fromPieces <= 0)
         {
             _context.StockEntries.Remove(fromEntry);
+        }
+        else
+        {
+            fromEntry.FullUnits = fromPieces / perUnit;
+            fromEntry.LoosePieces = fromPieces % perUnit;
         }
 
         // Ziel-Bestand anpassen
@@ -148,20 +202,25 @@ public class IndexModel : PageModel
                 s.ArticleId == SelectedArticleId &&
                 s.LocationId == ToLocationId);
 
+        var toPiecesExisting = 0;
+
         if (toEntry == null)
         {
             toEntry = new StockEntry
             {
                 ArticleId = SelectedArticleId,
-                LocationId = ToLocationId,
-                Quantity = Quantity
+                LocationId = ToLocationId
             };
             _context.StockEntries.Add(toEntry);
         }
         else
         {
-            toEntry.Quantity += Quantity;
+            toPiecesExisting = (toEntry.FullUnits * perUnit) + toEntry.LoosePieces;
         }
+
+        var toPieces = toPiecesExisting + requestedPieces;
+        toEntry.FullUnits = toPieces / perUnit;
+        toEntry.LoosePieces = toPieces % perUnit;
 
         await _context.SaveChangesAsync();
 
@@ -174,7 +233,7 @@ public class IndexModel : PageModel
             : "frei";
 
         PlainFileLogger.Log(
-            $"Buchung: {Quantity}x {article.Name} von '{fromName}' nach '{toName}'");
+            $"Buchung: {FullUnitsToMove} Einheiten, {LoosePiecesToMove} lose St\u00fcck {article.Name} von '{fromName}' nach '{toName}'");
 
         // Bleibt auf der Buchungsseite
         return RedirectToPage();

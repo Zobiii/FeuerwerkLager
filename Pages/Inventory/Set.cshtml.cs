@@ -26,7 +26,10 @@ public class SetModel : PageModel
     public int? SelectedLocationId { get; set; } // null = frei
 
     [BindProperty]
-    public int NewQuantity { get; set; }
+    public int NewFullUnits { get; set; }
+
+    [BindProperty]
+    public int NewLoosePieces { get; set; }
 
     public async Task OnGetAsync()
     {
@@ -51,7 +54,7 @@ public class SetModel : PageModel
 
         if (SelectedArticleId <= 0)
         {
-            ModelState.AddModelError(string.Empty, "Bitte einen Artikel auswählen.");
+            ModelState.AddModelError(string.Empty, "Bitte einen Artikel ausw\u00e4hlen.");
             return Page();
         }
 
@@ -60,14 +63,14 @@ public class SetModel : PageModel
             var locationExists = await _context.Locations.AnyAsync(l => l.Id == SelectedLocationId.Value);
             if (!locationExists)
             {
-                ModelState.AddModelError(string.Empty, "Der gewählte Lagerplatz existiert nicht.");
+                ModelState.AddModelError(string.Empty, "Der gew\u00e4hlte Lagerplatz existiert nicht.");
                 return Page();
             }
         }
 
-        if (NewQuantity < 0)
+        if (NewFullUnits < 0 || NewLoosePieces < 0)
         {
-            ModelState.AddModelError(string.Empty, "Menge darf nicht negativ sein.");
+            ModelState.AddModelError(string.Empty, "Mengen d\u00fcrfen nicht negativ sein.");
             return Page();
         }
 
@@ -78,14 +81,38 @@ public class SetModel : PageModel
             return Page();
         }
 
+        var perUnit = (article.IsMultiPart && article.PiecesPerUnit.HasValue && article.PiecesPerUnit.Value > 0)
+            ? article.PiecesPerUnit.Value
+            : 1;
+
+        if (!article.IsMultiPart || !article.PiecesPerUnit.HasValue)
+        {
+            if (NewLoosePieces > 0)
+            {
+                ModelState.AddModelError(string.Empty, "Lose Einzelteile sind bei diesem Artikel nicht vorgesehen.");
+                return Page();
+            }
+        }
+        else
+        {
+            if (NewLoosePieces >= perUnit)
+            {
+                ModelState.AddModelError(string.Empty, $"Lose Einzelteile m\u00fcssen kleiner als {perUnit} sein.");
+                return Page();
+            }
+        }
+
         var entry = await _context.StockEntries
             .FirstOrDefaultAsync(s =>
                 s.ArticleId == SelectedArticleId &&
                 s.LocationId == SelectedLocationId);
 
-        int oldQuantity = entry?.Quantity ?? 0;
+        var oldFull = entry?.FullUnits ?? 0;
+        var oldLoose = entry?.LoosePieces ?? 0;
 
-        if (NewQuantity == 0)
+        var targetPieces = (NewFullUnits * perUnit) + NewLoosePieces;
+
+        if (targetPieces == 0)
         {
             if (entry != null)
             {
@@ -99,15 +126,13 @@ public class SetModel : PageModel
                 entry = new StockEntry
                 {
                     ArticleId = SelectedArticleId,
-                    LocationId = SelectedLocationId,
-                    Quantity = NewQuantity
+                    LocationId = SelectedLocationId
                 };
                 _context.StockEntries.Add(entry);
             }
-            else
-            {
-                entry.Quantity = NewQuantity;
-            }
+
+            entry.FullUnits = targetPieces / perUnit;
+            entry.LoosePieces = targetPieces % perUnit;
         }
 
         await _context.SaveChangesAsync();
@@ -124,7 +149,7 @@ public class SetModel : PageModel
         }
 
         PlainFileLogger.Log(
-            $"Inventur: Artikel {article.Name}, Lagerplatz '{locName}', Menge alt: {oldQuantity}, neu: {NewQuantity}");
+            $"Inventur: Artikel {article.Name}, Lagerplatz '{locName}', alt: {oldFull} Einheiten / {oldLoose} lose, neu: {NewFullUnits} Einheiten / {NewLoosePieces} lose");
 
         return RedirectToPage("/Index");
     }

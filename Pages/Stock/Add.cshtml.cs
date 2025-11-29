@@ -26,7 +26,10 @@ public class AddModel : PageModel
     public int? SelectedLocationId { get; set; } // null = frei
 
     [BindProperty]
-    public int QuantityToAdd { get; set; }
+    public int FullUnitsToAdd { get; set; }
+
+    [BindProperty]
+    public int LoosePiecesToAdd { get; set; }
 
     public async Task OnGetAsync()
     {
@@ -49,15 +52,21 @@ public class AddModel : PageModel
             .OrderBy(l => l.Name)
             .ToListAsync();
 
-        if (QuantityToAdd <= 0)
+        if (SelectedArticleId <= 0)
         {
-            ModelState.AddModelError(string.Empty, "Menge muss größer 0 sein.");
+            ModelState.AddModelError(string.Empty, "Bitte einen Artikel ausw\u00e4hlen.");
             return Page();
         }
 
-        if (SelectedArticleId <= 0)
+        if (FullUnitsToAdd < 0 || LoosePiecesToAdd < 0)
         {
-            ModelState.AddModelError(string.Empty, "Bitte einen Artikel auswählen.");
+            ModelState.AddModelError(string.Empty, "Mengen d\u00fcrfen nicht negativ sein.");
+            return Page();
+        }
+
+        if (FullUnitsToAdd == 0 && LoosePiecesToAdd == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Bitte mindestens eine Menge angeben.");
             return Page();
         }
 
@@ -66,7 +75,7 @@ public class AddModel : PageModel
             var locationExists = await _context.Locations.AnyAsync(l => l.Id == SelectedLocationId.Value);
             if (!locationExists)
             {
-                ModelState.AddModelError(string.Empty, "Der gewählte Lagerplatz existiert nicht.");
+                ModelState.AddModelError(string.Empty, "Der gew\u00e4hlte Lagerplatz existiert nicht.");
                 return Page();
             }
         }
@@ -76,6 +85,24 @@ public class AddModel : PageModel
         {
             ModelState.AddModelError(string.Empty, "Artikel wurde nicht gefunden.");
             return Page();
+        }
+
+        if (!article.IsMultiPart || !article.PiecesPerUnit.HasValue)
+        {
+            if (LoosePiecesToAdd > 0)
+            {
+                ModelState.AddModelError(string.Empty, "Lose Einzelteile sind bei diesem Artikel nicht vorgesehen.");
+                return Page();
+            }
+        }
+        else
+        {
+            var perUnit = article.PiecesPerUnit.Value;
+            if (LoosePiecesToAdd >= perUnit)
+            {
+                ModelState.AddModelError(string.Empty, $"Lose Einzelteile m\u00fcssen kleiner als {perUnit} sein.");
+                return Page();
+            }
         }
 
         // vorhandenen Bestand an diesem Lagerplatz holen (oder frei)
@@ -90,13 +117,22 @@ public class AddModel : PageModel
             {
                 ArticleId = SelectedArticleId,
                 LocationId = SelectedLocationId,
-                Quantity = QuantityToAdd
+                FullUnits = FullUnitsToAdd,
+                LoosePieces = LoosePiecesToAdd
             };
             _context.StockEntries.Add(entry);
         }
         else
         {
-            entry.Quantity += QuantityToAdd;
+            entry.FullUnits += FullUnitsToAdd;
+            entry.LoosePieces += LoosePiecesToAdd;
+        }
+
+        if (article.IsMultiPart && article.PiecesPerUnit.HasValue && article.PiecesPerUnit.Value > 0)
+        {
+            var perUnit = article.PiecesPerUnit.Value;
+            entry.FullUnits += entry.LoosePieces / perUnit;
+            entry.LoosePieces = entry.LoosePieces % perUnit;
         }
 
         await _context.SaveChangesAsync();
@@ -112,7 +148,7 @@ public class AddModel : PageModel
             locationName = "frei";
         }
 
-        PlainFileLogger.Log($"Bestand erhöht: +{QuantityToAdd}x {article.Name} am Lagerplatz '{locationName}'");
+        PlainFileLogger.Log($"Bestand erh\u00f6ht: +{FullUnitsToAdd} Einheiten, +{LoosePiecesToAdd} lose St\u00fcck von {article.Name} am Lagerplatz '{locationName}'");
 
         return RedirectToPage("/Index");
     }

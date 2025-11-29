@@ -35,7 +35,8 @@ public class IndexModel : PageModel
         public string LocationName { get; set; } = "frei";
         public bool IsFree => LocationName == "frei";
 
-        public int Quantity { get; set; }
+        public int FullUnits { get; set; }
+        public int LoosePieces { get; set; }
         public double? TotalNEM { get; set; }
 
         // Multi-Part Infos
@@ -70,10 +71,10 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         TotalStockPositionsAll = allEntries.Count;
-        TotalNemAll = allEntries.Sum(e => (e.Article.NEM ?? 0.0) * e.Quantity);
+        TotalNemAll = allEntries.Sum(e => CalculateTotalNem(e) ?? 0.0);
         TotalPiecesAll = allEntries
             .Where(e => e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
-            .Sum(e => e.Quantity * e.Article.PiecesPerUnit!.Value);
+            .Sum(e => e.FullUnits * e.Article.PiecesPerUnit!.Value + e.LoosePieces);
 
         // Filter-Lookup
         Locations = await _context.Locations
@@ -122,7 +123,7 @@ public class IndexModel : PageModel
             int? totalPieces = null;
             if (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
             {
-                totalPieces = e.Article.PiecesPerUnit.Value * e.Quantity;
+                totalPieces = (e.FullUnits * e.Article.PiecesPerUnit.Value) + e.LoosePieces;
             }
 
             return new StockRow
@@ -133,12 +134,31 @@ public class IndexModel : PageModel
                 Company = e.Article.Company,
                 Category = e.Article.Category,
                 LocationName = e.Location != null ? e.Location.Name : "frei",
-                Quantity = e.Quantity,
-                TotalNEM = e.Article.NEM.HasValue ? e.Article.NEM.Value * e.Quantity : null,
+                FullUnits = e.FullUnits,
+                LoosePieces = e.LoosePieces,
+                TotalNEM = CalculateTotalNem(e),
                 IsMultiPart = e.Article.IsMultiPart,
                 PiecesPerUnit = e.Article.PiecesPerUnit,
                 TotalPieces = totalPieces
             };
         }).ToList();
+
+        double? CalculateTotalNem(Models.StockEntry entry)
+        {
+            if (!entry.Article.NEM.HasValue)
+            {
+                return null;
+            }
+
+            if (entry.Article.IsMultiPart && entry.Article.PiecesPerUnit.HasValue)
+            {
+                var perPieceNem = entry.Article.NEM.Value / entry.Article.PiecesPerUnit.Value;
+                var pieces = (entry.FullUnits * entry.Article.PiecesPerUnit.Value) + entry.LoosePieces;
+                return perPieceNem * pieces;
+            }
+
+            // nicht multipart -> NEM pro Einheit
+            return entry.Article.NEM.Value * (entry.FullUnits + entry.LoosePieces);
+        }
     }
 }

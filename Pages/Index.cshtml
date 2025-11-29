@@ -87,8 +87,9 @@
                     <th>Produktnummer</th>
                     <th>Firma</th>
                     <th>Lagerplatz</th>
-                    <th class="text-end">Menge</th>
-                    <th class="text-end">Einzelteile</th>
+                    <th class="text-end">Volle Einheiten</th>
+                    <th class="text-end">Lose St&uuml;ck</th>
+                    <th class="text-end">Gesamt St&uuml;ck</th>
                     <th class="text-end">NEM gesamt</th>
                 </tr>
             </thead>
@@ -120,11 +121,16 @@
                                 <span class="badge-location">@row.LocationName</span>
                             }
                         </td>
-                        <td class="text-end">@row.Quantity</td>
+                        <td class="text-end">@row.FullUnits</td>
+                        <td class="text-end">@row.LoosePieces</td>
                         <td class="text-end">
                             @if (row.TotalPieces.HasValue)
                             {
                                 @row.TotalPieces.Value
+                            }
+                            else
+                            {
+                                @(row.FullUnits + row.LoosePieces)
                             }
                         </td>
                         <td class="text-end">

@@ -16,7 +16,7 @@ public class DetailsModel : PageModel
 
     public LocationView? Location { get; set; }
     public List<LocationItemRow> Items { get; set; } = new();
-    public int TotalQuantity { get; set; }
+    public int TotalQuantity { get; set; } // in St\u00fccken
     public double? TotalNEM { get; set; }
 
     public class LocationView
@@ -31,7 +31,9 @@ public class DetailsModel : PageModel
         public string ArticleName { get; set; } = string.Empty;
         public string Company { get; set; } = string.Empty;
         public string? ProductNumber { get; set; }
-        public int Quantity { get; set; }
+        public int FullUnits { get; set; }
+        public int LoosePieces { get; set; }
+        public int TotalPieces { get; set; }
         public double? NemPerPiece { get; set; }
         public double? TotalNem { get; set; }
     }
@@ -59,10 +61,21 @@ public class DetailsModel : PageModel
 
         Items = entries.Select(e =>
         {
+            var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
+                ? e.Article.PiecesPerUnit.Value
+                : 1;
+
+            var totalPieces = (e.FullUnits * perUnit) + e.LoosePieces;
+
             double? totalNem = null;
+            double? nemPerPiece = null;
+
             if (e.Article.NEM.HasValue)
             {
-                totalNem = e.Article.NEM.Value * e.Quantity;
+                nemPerPiece = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0
+                    ? e.Article.NEM.Value / e.Article.PiecesPerUnit.Value
+                    : e.Article.NEM.Value;
+                totalNem = nemPerPiece * totalPieces;
             }
 
             return new LocationItemRow
@@ -70,13 +83,15 @@ public class DetailsModel : PageModel
                 ArticleName = e.Article.Name,
                 Company = e.Article.Company,
                 ProductNumber = e.Article.ProductNumber,
-                Quantity = e.Quantity,
-                NemPerPiece = e.Article.NEM,
+                FullUnits = e.FullUnits,
+                LoosePieces = e.LoosePieces,
+                TotalPieces = totalPieces,
+                NemPerPiece = nemPerPiece,
                 TotalNem = totalNem
             };
         }).ToList();
 
-        TotalQuantity = Items.Sum(i => i.Quantity);
+        TotalQuantity = Items.Sum(i => i.TotalPieces);
         if (Items.Any(i => i.TotalNem.HasValue))
         {
             TotalNEM = Items.Sum(i => i.TotalNem ?? 0.0);

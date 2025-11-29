@@ -17,10 +17,10 @@ else
 
     <div class="toolbar">
         <a asp-page="/Locations/Index" class="btn-secondary-custom">
-            ⬅️ Zurück zur Lagerplatzliste
+            Zurück zur Lagerplatzliste
         </a>
         <a asp-page="/Index" class="btn-secondary-custom">
-            🏠 Dashboard
+            Dashboard
         </a>
     </div>
 
@@ -31,7 +31,7 @@ else
         <div class="card-body">
             <p>
                 Positionen: <strong>@Model.Items.Count</strong><br />
-                Gesamtmenge: <strong>@Model.TotalQuantity</strong><br />
+                Gesamtmenge (Stück): <strong>@Model.TotalQuantity</strong><br />
                 NEM gesamt:
                 <strong>
                     @if (Model.TotalNEM.HasValue)
@@ -58,7 +58,9 @@ else
                         <th>Artikel</th>
                         <th>Firma</th>
                         <th>Produktnummer</th>
-                        <th class="text-end">Menge</th>
+                        <th class="text-end">Volle Einheiten</th>
+                        <th class="text-end">Lose Stück</th>
+                        <th class="text-end">Gesamt Stück</th>
                         <th class="text-end">NEM / Stück</th>
                         <th class="text-end">NEM gesamt</th>
                     </tr>
@@ -67,7 +69,7 @@ else
                 @if (!Model.Items.Any())
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="8" class="text-center py-4 text-muted">
                             Dieser Lagerplatz ist aktuell leer.
                         </td>
                     </tr>
@@ -80,7 +82,9 @@ else
                             <td>@row.ArticleName</td>
                             <td>@row.Company</td>
                             <td>@row.ProductNumber</td>
-                            <td class="text-end">@row.Quantity</td>
+                            <td class="text-end">@row.FullUnits</td>
+                            <td class="text-end">@row.LoosePieces</td>
+                            <td class="text-end">@row.TotalPieces</td>
                             <td class="text-end">
                                 @if (row.NemPerPiece.HasValue)
                                 {

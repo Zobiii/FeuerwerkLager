@@ -21,7 +21,7 @@ public class NemOverviewModel : PageModel
         public string LocationName { get; set; } = string.Empty;
         public bool IsFree { get; set; }
         public int PositionCount { get; set; }
-        public int TotalQuantity { get; set; }
+        public int TotalQuantity { get; set; } // in St\u00fccken
         public double TotalNem { get; set; }
     }
 
@@ -45,7 +45,7 @@ public class NemOverviewModel : PageModel
 
             if (isFree)
             {
-                name = "frei (nicht zugeordnete Bestände)";
+                name = "frei (nicht zugeordnete Best\u00e4nde)";
             }
             else
             {
@@ -54,16 +54,36 @@ public class NemOverviewModel : PageModel
             }
 
             var posCount = g.Count();
-            var totalQty = g.Sum(e => e.Quantity);
+            var totalPieces = g.Sum(e =>
+            {
+                var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
+                    ? e.Article.PiecesPerUnit.Value
+                    : 1;
+                return (e.FullUnits * perUnit) + e.LoosePieces;
+            });
             var totalNem = g.Sum(e =>
-                (e.Article.NEM ?? 0.0) * e.Quantity);
+            {
+                if (!e.Article.NEM.HasValue)
+                    return 0.0;
+
+                var perUnit = (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0)
+                    ? e.Article.PiecesPerUnit.Value
+                    : 1;
+
+                var totalPieces = (e.FullUnits * perUnit) + e.LoosePieces;
+                var nemPerPiece = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue && e.Article.PiecesPerUnit.Value > 0
+                    ? e.Article.NEM.Value / e.Article.PiecesPerUnit.Value
+                    : e.Article.NEM.Value; // f\u00fcr nicht-multipart gilt NEM pro Einheit
+
+                return nemPerPiece * totalPieces;
+            });
 
             Rows.Add(new NemRow
             {
                 LocationName = name,
                 IsFree = isFree,
                 PositionCount = posCount,
-                TotalQuantity = totalQty,
+                TotalQuantity = totalPieces,
                 TotalNem = totalNem
             });
         }

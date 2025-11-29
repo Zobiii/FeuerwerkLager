@@ -13,5 +13,16 @@ public class StockEntry
     public Location? Location { get; set; }
 
     [Range(0, int.MaxValue)]
-    public int Quantity { get; set; }              // z.B. 12 Stück
+    public int FullUnits { get; set; }             // Volle Gebinde/Schachteln/Einheiten
+
+    [Range(0, int.MaxValue)]
+    public int LoosePieces { get; set; }           // Lose Einzelteile aus angebrochenen Gebinden
+
+    /// <summary>
+    /// Gesamt-Stückzahl: volle Einheiten + lose Stücke.
+    /// Bei nicht-multipart Artikeln entspricht das der Stückzahl; lose Teile sollten dort 0 sein.
+    /// </summary>
+    public int TotalPieces => Article != null && Article.IsMultiPart && Article.PiecesPerUnit.HasValue
+        ? (FullUnits * Article.PiecesPerUnit.Value) + LoosePieces
+        : FullUnits + LoosePieces;
 }

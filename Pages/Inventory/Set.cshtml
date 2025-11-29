@@ -5,8 +5,8 @@
 }
 
 <div class="page-header">
-    <h2>Inventur – Bestand direkt setzen</h2>
-    <p>Gezählte Menge für einen Artikel an einem Lagerplatz als neuen Soll-Bestand eintragen.</p>
+    <h2>Inventur - Bestand direkt setzen</h2>
+    <p>Gez\u00e4hlte Menge f\u00fcr einen Artikel an einem Lagerplatz als neuen Soll-Bestand eintragen.</p>
 </div>
 
 <div class="form-card">
@@ -25,8 +25,13 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="NewQuantity">Gezählte Menge (Soll)</label>
-                <input asp-for="NewQuantity" class="form-control" type="number" min="0" />
+                <label asp-for="NewFullUnits">Volle Einheiten (Soll)</label>
+                <input asp-for="NewFullUnits" class="form-control" type="number" min="0" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewLoosePieces">Lose Einzelteile (Soll)</label>
+                <input asp-for="NewLoosePieces" class="form-control" type="number" min="0" />
             </div>
 
             <div class="form-group">
@@ -42,16 +47,16 @@
         </div>
 
         <p class="mt-2 text-muted" style="font-size:0.85rem;">
-            Hinweis: Die eingetragene Menge ersetzt die bisherige Menge am gewählten Lagerplatz komplett.
+            Hinweis: Lose Einzelteile m\u00fcssen kleiner als eine volle Einheit sein (St\u00fccke pro Artikel beachten).
             Bei <strong>0</strong> wird die Position entfernt.
         </p>
 
         <div class="mt-3 d-flex gap-2">
             <button type="submit" class="btn-main">
-                📋 Inventur übernehmen
+                ?? Inventur \u00fcbernehmen
             </button>
             <a asp-page="/Index" class="btn-secondary-custom">
-                ⬅️ Zurück zum Dashboard
+                ?? Zur\u00fcck zum Dashboard
             </a>
         </div>
     </form>

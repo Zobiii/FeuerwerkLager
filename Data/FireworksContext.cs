@@ -17,15 +17,19 @@ public class FireworksContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Quantity >= 0
         modelBuilder.Entity<StockEntry>()
-            .Property(s => s.Quantity)
+            .Property(s => s.FullUnits)
+            .HasDefaultValue(0);
+
+        modelBuilder.Entity<StockEntry>()
+            .Property(s => s.LoosePieces)
             .HasDefaultValue(0);
 
         modelBuilder.Entity<StockEntry>()
             .ToTable("StockEntries", builder =>
             {
-                builder.HasCheckConstraint("CK_StockEntries_Quantity_NonNegative", "[Quantity] >= 0");
+                builder.HasCheckConstraint("CK_StockEntries_FullUnits_NonNegative", "[FullUnits] >= 0");
+                builder.HasCheckConstraint("CK_StockEntries_LoosePieces_NonNegative", "[LoosePieces] >= 0");
             });
 
         // Einzigartigkeit: Pro (Article, Location) nur eine Zeile

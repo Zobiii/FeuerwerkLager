@@ -36,7 +36,7 @@ public class DeleteModel : PageModel
 
         if (SelectedArticleId <= 0)
         {
-            ModelState.AddModelError(string.Empty, "Bitte einen Artikel auswählen.");
+            ModelState.AddModelError(string.Empty, "Bitte einen Artikel ausw\u00e4hlen.");
             return Page();
         }
 
@@ -45,15 +45,22 @@ public class DeleteModel : PageModel
 
         if (article == null)
         {
-            ModelState.AddModelError(string.Empty, "Der ausgewählte Artikel wurde nicht gefunden.");
+            ModelState.AddModelError(string.Empty, "Der ausgew\u00e4hlte Artikel wurde nicht gefunden.");
             return Page();
         }
 
         var stockEntries = await _context.StockEntries
+            .Include(s => s.Article)
             .Where(s => s.ArticleId == SelectedArticleId)
             .ToListAsync();
 
-        var totalQuantity = stockEntries.Sum(s => s.Quantity);
+        var totalPieces = stockEntries.Sum(s =>
+        {
+            var perUnit = (s.Article.IsMultiPart && s.Article.PiecesPerUnit.HasValue && s.Article.PiecesPerUnit.Value > 0)
+                ? s.Article.PiecesPerUnit.Value
+                : 1;
+            return (s.FullUnits * perUnit) + s.LoosePieces;
+        });
         var positionCount = stockEntries.Count;
 
         _context.StockEntries.RemoveRange(stockEntries);
@@ -62,8 +69,8 @@ public class DeleteModel : PageModel
         await _context.SaveChangesAsync();
 
         PlainFileLogger.Log(
-            $"Artikel gelöscht: {article.Name}, Firma: {article.Company}, " +
-            $"Bestandszeilen entfernt: {positionCount}, Gesamtmenge: {totalQuantity}");
+            $"Artikel gel\u00f6scht: {article.Name}, Firma: {article.Company}, " +
+            $"Bestandszeilen entfernt: {positionCount}, Gesamtmenge (St\u00fcck): {totalPieces}");
 
         return RedirectToPage("/Index");
     }

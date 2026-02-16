@@ -121,9 +121,21 @@ else
             color: #9ca3af;
         }
 
+        .barcode-svg {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .barcode-svg svg {
-            width: 100%;
-            height: auto;
+            width: 260px;
+            height: 80px;
+            max-width: 100%;
+            image-rendering: crisp-edges;
         }
 
         .barcode-value {
@@ -162,8 +174,14 @@ else
         @@media print {
             body {
                 background: #ffffff !important;
+                color: #000000 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+
+            body::before,
+            body::after {
+                display: none !important;
             }
 
             .page-header,
@@ -175,9 +193,17 @@ else
             }
 
             .barcode-card {
-                box-shadow: none;
+                background: #ffffff !important;
+                color: #000 !important;
+                box-shadow: none !important;
                 border-radius: 0;
                 border: 1px solid #000;
+            }
+
+            .barcode-name,
+            .barcode-desc,
+            .barcode-value {
+                color: #000 !important;
             }
 
             .barcode-grid {
@@ -220,3 +246,7 @@ else
         });
     </script>
 }
+
+
+
+

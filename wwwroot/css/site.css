@@ -972,13 +972,32 @@ a:hover {
 @media print {
     body {
         background: #ffffff !important;
+        color: #000000 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+    body::before,
+    body::after {
+        display: none !important;
+    }
+
+    .app-shell {
+        background: #ffffff !important;
     }
 
     .glass-nav,
     .app-footer,
     .background-aurora {
         display: none !important;
+    }
+
+    .glass-card,
+    .card,
+    .form-card {
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+        border-color: #000000 !important;
     }
 }

@@ -43,9 +43,9 @@ public class BarcodesModel : PageModel
             Format = BarcodeFormat.CODE_128,
             Options = new ZXing.Common.EncodingOptions
             {
-                Height = 60,
-                Width = 220,
-                Margin = 2,
+                Height = 80,
+                Width = 260,
+                Margin = 8,
                 PureBarcode = true
             },
             Renderer = new SvgRenderer()
@@ -68,3 +68,4 @@ public class BarcodesModel : PageModel
         }
     }
 }
+

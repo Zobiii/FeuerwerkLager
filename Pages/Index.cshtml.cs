@@ -17,7 +17,6 @@ public class IndexModel : PageModel
     public IList<StockRow> Stock { get; set; } = new List<StockRow>();
     public IList<LocationOption> Locations { get; set; } = new List<LocationOption>();
 
-    // Dashboard-Kennzahlen (gesamtes System, nicht gefiltert)
     public int TotalArticleCount { get; set; }
     public int TotalLocationCount { get; set; }
     public int TotalStockPositionsAll { get; set; }
@@ -31,17 +30,11 @@ public class IndexModel : PageModel
         public string? ProductNumber { get; set; }
         public string Company { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
-
         public string LocationName { get; set; } = "frei";
         public bool IsFree => LocationName == "frei";
-
         public int FullUnits { get; set; }
         public int LoosePieces { get; set; }
         public double? TotalNEM { get; set; }
-
-        // Multi-Part Infos
-        public bool IsMultiPart { get; set; }
-        public int? PiecesPerUnit { get; set; }
         public int? TotalPieces { get; set; }
     }
 
@@ -62,32 +55,28 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        // Kennzahlen (ohne Filter)
-        TotalArticleCount = await _context.Articles.CountAsync();
-        TotalLocationCount = await _context.Locations.CountAsync();
+        TotalArticleCount = await _context.Articles.AsNoTracking().CountAsync();
+        TotalLocationCount = await _context.Locations.AsNoTracking().CountAsync();
+        TotalStockPositionsAll = await _context.StockEntries.AsNoTracking().CountAsync();
 
         var allEntries = await _context.StockEntries
+            .AsNoTracking()
             .Include(e => e.Article)
             .ToListAsync();
 
-        TotalStockPositionsAll = allEntries.Count;
         TotalNemAll = allEntries.Sum(e => Models.StockMath.TotalNem(e) ?? 0.0);
         TotalPiecesAll = allEntries
             .Where(e => e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
-            .Sum(e => Models.StockMath.TotalPieces(e));
+            .Sum(Models.StockMath.TotalPieces);
 
-        // Filter-Lookup
         Locations = await _context.Locations
+            .AsNoTracking()
             .OrderBy(l => l.Name)
-            .Select(l => new LocationOption
-            {
-                Id = l.Id,
-                Name = l.Name
-            })
+            .Select(l => new LocationOption { Id = l.Id, Name = l.Name })
             .ToListAsync();
 
-        // Bestandsliste (mit Filter)
         var query = _context.StockEntries
+            .AsNoTracking()
             .Include(s => s.Article)
             .Include(s => s.Location)
             .AsQueryable();
@@ -98,10 +87,8 @@ public class IndexModel : PageModel
             query = query.Where(e =>
                 EF.Functions.Like(e.Article.Name, $"%{st}%") ||
                 EF.Functions.Like(e.Article.Company, $"%{st}%") ||
-                (e.Article.ProductNumber != null &&
-                 EF.Functions.Like(e.Article.ProductNumber, $"%{st}%")) ||
-                (e.Article.Category != null &&
-                 EF.Functions.Like(e.Article.Category, $"%{st}%")));
+                (e.Article.ProductNumber != null && EF.Functions.Like(e.Article.ProductNumber, $"%{st}%")) ||
+                (e.Article.Category != null && EF.Functions.Like(e.Article.Category, $"%{st}%")));
         }
 
         if (OnlyFree)
@@ -118,29 +105,20 @@ public class IndexModel : PageModel
             .ThenBy(e => e.Article.Name)
             .ToListAsync();
 
-        Stock = entries.Select(e =>
+        Stock = entries.Select(e => new StockRow
         {
-            int? totalPieces = null;
-            if (e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue)
-            {
-                totalPieces = Models.StockMath.TotalPieces(e);
-            }
-
-            return new StockRow
-            {
-                ArticleId = e.ArticleId,
-                ArticleName = e.Article.Name,
-                ProductNumber = e.Article.ProductNumber,
-                Company = e.Article.Company,
-                Category = e.Article.Category,
-                LocationName = e.Location != null ? e.Location.Name : "frei",
-                FullUnits = e.FullUnits,
-                LoosePieces = e.LoosePieces,
-                TotalNEM = Models.StockMath.TotalNem(e),
-                IsMultiPart = e.Article.IsMultiPart,
-                PiecesPerUnit = e.Article.PiecesPerUnit,
-                TotalPieces = totalPieces
-            };
+            ArticleId = e.ArticleId,
+            ArticleName = e.Article.Name,
+            ProductNumber = e.Article.ProductNumber,
+            Company = e.Article.Company,
+            Category = e.Article.Category,
+            LocationName = e.Location != null ? e.Location.Name : "frei",
+            FullUnits = e.FullUnits,
+            LoosePieces = e.LoosePieces,
+            TotalNEM = Models.StockMath.TotalNem(e),
+            TotalPieces = e.Article.IsMultiPart && e.Article.PiecesPerUnit.HasValue
+                ? Models.StockMath.TotalPieces(e)
+                : null
         }).ToList();
     }
 }

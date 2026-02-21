@@ -51,6 +51,7 @@ public class IndexModel : PageModel
     private async Task LoadDataAsync()
     {
         Articles = await _context.Articles
+            .AsNoTracking()
             .OrderBy(a => a.Name)
             .ToListAsync();
 
@@ -61,11 +62,13 @@ public class IndexModel : PageModel
                 : 1);
 
         Locations = await _context.Locations
+            .AsNoTracking()
             .OrderBy(l => l.Name)
             .ToListAsync();
 
         var entries = await _context.StockEntries
-            .Include(e => e.Article)
+            .AsNoTracking()
+            .Select(e => new { e.ArticleId, e.LocationId, e.FullUnits, e.LoosePieces })
             .ToListAsync();
 
         AvailabilityPieces = entries
@@ -74,13 +77,9 @@ public class IndexModel : PageModel
                 g => BuildKey(g.Key.ArticleId, g.Key.LocationId),
                 g =>
                 {
-                    var sampleArticle = g.First().Article;
-                    var perUnit = (sampleArticle.IsMultiPart && sampleArticle.PiecesPerUnit.HasValue && sampleArticle.PiecesPerUnit.Value > 0)
-                        ? sampleArticle.PiecesPerUnit.Value
-                        : 1;
+                    var perUnit = PiecesPerUnitMap.TryGetValue(g.Key.ArticleId, out var ppu) ? ppu : 1;
                     return g.Sum(e => (e.FullUnits * perUnit) + e.LoosePieces);
-                }
-            );
+                });
     }
 
     private int GetAvailablePieces(int articleId, int? fromLocationId)

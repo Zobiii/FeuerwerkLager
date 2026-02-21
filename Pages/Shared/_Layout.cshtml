@@ -1,134 +1,42 @@
-@*
-    Gemeinsames Layout – Glassmorphism Shell
-*@
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Feuerwerk Lager</title>
-
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
     @RenderSection("Styles", required: false)
 </head>
-<body class="app-shell">
-    <div class="background-aurora"></div>
-
-    <header class="glass-nav">
-        <div class="container nav-inner">
-            <a class="brand" asp-page="/Index">
-                <span class="brand-mark"></span>
-                <span>
-                    <span class="brand-title">Feuerwerk Lager</span>
-                    <span class="brand-subtitle">Inventory Control</span>
-                </span>
-            </a>
-
-            <nav class="nav-links">
-                <a class="nav-link-glass" asp-page="/Index">Dashboard</a>
-
-                <div class="dropdown">
-                    <a class="nav-link-glass dropdown-toggle" href="#" data-bs-toggle="dropdown">Artikel</a>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li><a class="dropdown-item" asp-page="/Articles/Create">Neu anlegen</a></li>
-                        <li><a class="dropdown-item" asp-page="/Articles/Edit">Bearbeiten</a></li>
-                        <li><a class="dropdown-item" asp-page="/Articles/Delete">Löschen</a></li>
-                    </ul>
-                </div>
-
-                <div class="dropdown">
-                    <a class="nav-link-glass dropdown-toggle" href="#" data-bs-toggle="dropdown">Lager</a>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li><a class="dropdown-item" asp-page="/Locations/Index">Lagerplätze</a></li>
-                        <li><a class="dropdown-item" asp-page="/Locations/Create">Neu anlegen</a></li>
-                        <li><a class="dropdown-item" asp-page="/Locations/Delete">Löschen</a></li>
-                        <li><a class="dropdown-item" asp-page="/Locations/Barcodes">Barcodes</a></li>
-                        <li><a class="dropdown-item" asp-page="/Reports/NemOverview">NEM-Report</a></li>
-                    </ul>
-                </div>
-
-                <div class="dropdown">
-                    <a class="nav-link-glass dropdown-toggle" href="#" data-bs-toggle="dropdown">Bestand</a>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li><a class="dropdown-item" asp-page="/Bookings/Index">Buchen</a></li>
-                        <li><a class="dropdown-item" asp-page="/Stock/Add">Bestand erhöhen</a></li>
-                        <li><a class="dropdown-item" asp-page="/Inventory/Set">Inventur</a></li>
-                    </ul>
-                </div>
-
-                <a class="nav-link-glass" asp-page="/Logs/Index">Log</a>
-                <a class="nav-link-glass" asp-page="/Admin/Index">Admin</a>
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <a class="brand" asp-page="/Index">Feuerwerk Lager</a>
+            <nav class="main-nav">
+                <a asp-page="/Index">Dashboard</a>
+                <a asp-page="/Bookings/Index">Buchen</a>
+                <a asp-page="/Stock/Add">Bestand +</a>
+                <a asp-page="/Inventory/Set">Inventur</a>
+                <a asp-page="/Locations/Index">Lagerplätze</a>
+                <a asp-page="/Reports/NemOverview">NEM</a>
+                <a asp-page="/Logs/Index">Log</a>
+                <a asp-page="/Admin/Index">Admin</a>
             </nav>
-
-            <div class="nav-actions">
-                <a asp-page="/Stock/Add" class="btn-main btn-sm">Bestand +</a>
-                <a asp-page="/Bookings/Index" class="btn-secondary-custom btn-sm">Buchen</a>
-                <button type="button" class="btn-ghost btn-sm" id="toggle-lite">Lite Mode</button>
-                <button type="button" class="btn-ghost btn-sm" id="toggle-theme">Neutral</button>
-            </div>
         </div>
     </header>
 
-    <main role="main" class="app-main">
-        <div class="container page-stack">
-            @RenderBody()
-        </div>
+    <main class="container app-main">
+        @RenderBody()
     </main>
 
-    <footer class="app-footer">
+    <footer class="footer">
         <div class="container footer-inner">
-            <div>
-                <span class="footer-title">Feuerwerk Lager</span>
-                <div class="footer-tagline">Inventur entspannt – NEM im Blick</div>
-            </div>
-            <div class="footer-meta">
-                <span>&copy; @DateTime.Now.Year</span>
-                <span>Build @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version</span>
-            </div>
+            <span>&copy; @DateTime.Now.Year Feuerwerk Lager</span>
+            <span>Build @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version</span>
         </div>
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        (() => {
-            const body = document.body;
-            const liteKey = 'fw-lite';
-            const themeKey = 'fw-theme';
-
-            function applyToggles() {
-                const lite = localStorage.getItem(liteKey) === '1';
-                const neutral = localStorage.getItem(themeKey) === 'neutral';
-                body.classList.toggle('lite-mode', lite);
-                body.classList.toggle('theme-neutral', neutral);
-                const liteBtn = document.getElementById('toggle-lite');
-                const themeBtn = document.getElementById('toggle-theme');
-                if (liteBtn) {
-                    liteBtn.setAttribute('aria-pressed', lite ? 'true' : 'false');
-                    liteBtn.textContent = lite ? 'Full Mode' : 'Lite Mode';
-                }
-                if (themeBtn) {
-                    themeBtn.setAttribute('aria-pressed', neutral ? 'true' : 'false');
-                    themeBtn.textContent = neutral ? 'Buntes Theme' : 'Neutral';
-                }
-            }
-
-            document.getElementById('toggle-lite')?.addEventListener('click', () => {
-                const next = localStorage.getItem(liteKey) === '1' ? '0' : '1';
-                localStorage.setItem(liteKey, next);
-                applyToggles();
-            });
-
-            document.getElementById('toggle-theme')?.addEventListener('click', () => {
-                const next = localStorage.getItem(themeKey) === 'neutral' ? 'color' : 'neutral';
-                localStorage.setItem(themeKey, next);
-                applyToggles();
-            });
-
-            applyToggles();
-        })();
-    </script>
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

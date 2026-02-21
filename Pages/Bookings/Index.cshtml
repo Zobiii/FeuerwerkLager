@@ -4,10 +4,12 @@
     ViewData["Title"] = "Buchungen";
 }
 
-<div class="page-header">
-    <h2>Artikel buchen</h2>
-    <p>Artikel zwischen "frei" und Lagerplätzen bzw. zwischen Lagerplätzen umbuchen.</p>
-</div>
+<section class="card mb-3">
+    <div class="card-body">
+        <h1 class="h5 mb-1">Artikel buchen</h1>
+        <p class="text-muted mb-0">Umbuchung immer in Einzelstück-Logik (volle Einheiten + lose Stücke).</p>
+    </div>
+</section>
 
 <div class="form-card">
     <form method="post">
@@ -25,26 +27,7 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="FullUnitsToMove">Volle Einheiten</label>
-                <input asp-for="FullUnitsToMove"
-                       class="form-control"
-                       type="number"
-                       id="fullUnitsInput"
-                       min="0" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="LoosePiecesToMove">Lose Einzelteile</label>
-                <input asp-for="LoosePiecesToMove"
-                       class="form-control"
-                       type="number"
-                       id="loosePiecesInput"
-                       min="0" />
-                <small id="quantityHint" class="text-muted"></small>
-            </div>
-
-            <div class="form-group">
-                <label for="fromLocationSelect">Von (Ausgang)</label>
+                <label for="fromLocationSelect">Von</label>
                 <select asp-for="FromLocationId" class="form-select" id="fromLocationSelect">
                     <option value="">frei</option>
                     @foreach (var l in Model.Locations)
@@ -55,7 +38,7 @@
             </div>
 
             <div class="form-group">
-                <label>Nach (Ziel)</label>
+                <label for="toLocationSelect">Nach</label>
                 <select asp-for="ToLocationId" class="form-select" id="toLocationSelect">
                     <option value="">frei</option>
                     @foreach (var l in Model.Locations)
@@ -64,86 +47,64 @@
                     }
                 </select>
             </div>
+
+            <div class="form-group">
+                <label asp-for="FullUnitsToMove">Volle Einheiten</label>
+                <input asp-for="FullUnitsToMove" class="form-control" type="number" id="fullUnitsInput" min="0" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LoosePiecesToMove">Lose Stücke</label>
+                <input asp-for="LoosePiecesToMove" class="form-control" type="number" id="loosePiecesInput" min="0" />
+                <small id="quantityHint" class="hint-text"></small>
+            </div>
         </div>
 
         <div class="mt-3 d-flex gap-2">
-            <button type="submit" class="btn-main">
-                Buchen
-            </button>
-            <a asp-page="/Index" class="btn-secondary-custom">
-                Zurück zum Dashboard
-            </a>
+            <button type="submit" class="btn btn-primary">Buchen</button>
+            <a asp-page="/Index" class="btn btn-outline-secondary">Dashboard</a>
         </div>
     </form>
 </div>
 
 @section Scripts {
 <script>
-    (function () {
-        // Map aus dem Model: "ArticleId|LocationId/free" -> verfügbare Stücke
-        var availability = {
-            @foreach (var kv in Model.AvailabilityPieces)
-            {
-                <text>"@kv.Key": @kv.Value,</text>
-            }
-        };
-
-        // Map: ArticleId -> Stücke pro Einheit (1, wenn kein Multipart)
-        var perUnitMap = {
-            @foreach (var kv in Model.PiecesPerUnitMap)
-            {
-                <text>"@kv.Key": @kv.Value,</text>
-            }
-        };
-
-        function updateHint() {
-            var articleSelect = document.getElementById('articleSelect');
-            var fromSelect = document.getElementById('fromLocationSelect');
-            var hint = document.getElementById('quantityHint');
-            var fullInput = document.getElementById('fullUnitsInput');
-            var looseInput = document.getElementById('loosePiecesInput');
-
-            if (!articleSelect || !fromSelect || !hint) return;
-
-            var articleId = articleSelect.value;
-            var fromLocId = fromSelect.value;
-            var key = articleId + "|" + (fromLocId === "" ? "free" : fromLocId);
-
-            var maxPieces = availability[key] || 0;
-            var perUnit = perUnitMap[articleId] || 1;
-
-            var maxFull = Math.floor(maxPieces / perUnit);
-            var maxLoose = maxPieces % perUnit;
-
-            if (fullInput) {
-                fullInput.min = 0;
-                fullInput.max = maxFull;
-            }
-            if (looseInput) {
-                looseInput.min = 0;
-                looseInput.max = perUnit > 0 ? perUnit - 1 : 0;
-            }
-
-            if (maxPieces > 0) {
-                hint.textContent = "Verfügbar: " + maxPieces + " Stück (" + maxFull + " volle, " + maxLoose + " lose).";
-            } else {
-                hint.textContent = "Am gewählten Ausgang ist aktuell keine Menge verfügbar.";
-            }
+(function () {
+    var availability = {
+        @foreach (var kv in Model.AvailabilityPieces)
+        {
+            <text>"@kv.Key": @kv.Value,</text>
         }
+    };
+    var perUnitMap = {
+        @foreach (var kv in Model.PiecesPerUnitMap)
+        {
+            <text>"@kv.Key": @kv.Value,</text>
+        }
+    };
 
-        document.addEventListener('DOMContentLoaded', function () {
-            var articleSelect = document.getElementById('articleSelect');
-            var fromSelect = document.getElementById('fromLocationSelect');
+    function updateHint() {
+        var articleId = document.getElementById('articleSelect')?.value;
+        var fromLocId = document.getElementById('fromLocationSelect')?.value;
+        var hint = document.getElementById('quantityHint');
+        var fullInput = document.getElementById('fullUnitsInput');
+        var looseInput = document.getElementById('loosePiecesInput');
 
-            if (articleSelect) {
-                articleSelect.addEventListener('change', updateHint);
-            }
-            if (fromSelect) {
-                fromSelect.addEventListener('change', updateHint);
-            }
+        if (!articleId || !hint) return;
 
-            updateHint();
-        });
-    })();
+        var key = articleId + '|' + (fromLocId === '' ? 'free' : fromLocId);
+        var maxPieces = availability[key] || 0;
+        var perUnit = perUnitMap[articleId] || 1;
+
+        if (fullInput) fullInput.max = Math.floor(maxPieces / perUnit);
+        if (looseInput) looseInput.max = Math.max(0, perUnit - 1);
+
+        hint.textContent = 'Verfügbar: ' + maxPieces + ' Stück.';
+    }
+
+    document.getElementById('articleSelect')?.addEventListener('change', updateHint);
+    document.getElementById('fromLocationSelect')?.addEventListener('change', updateHint);
+    updateHint();
+})();
 </script>
 }

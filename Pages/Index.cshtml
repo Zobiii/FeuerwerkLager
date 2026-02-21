@@ -4,11 +4,10 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<section class="dashboard-hero glow-panel">
-    <div class="hero-copy">
-        <div class="hero-pill">Control Center</div>
-        <h1>Realtime Lagerstatus</h1>
-        <p>Alle Artikel, Kartons und Buchungen auf einen Blick. Plane den n&auml;chsten Schritt mit klaren Insights.</p>
+<section class="card mb-3">
+    <div class="card-body">
+        <h1 class="h4 mb-1">Lagerübersicht</h1>
+        <p class="text-muted mb-0">Schneller Arbeitsablauf: Bestand erhöhen, buchen, Inventur setzen.</p>
     </div>
 </section>
 
@@ -16,91 +15,81 @@
     <div class="summary-card">
         <div class="summary-label">Artikel</div>
         <div class="summary-value">@Model.TotalArticleCount</div>
-        <div class="summary-sub">verschiedene Feuerwerksartikel im System</div>
     </div>
     <div class="summary-card">
-        <div class="summary-label">Lagerpl&auml;tze</div>
+        <div class="summary-label">Lagerplätze</div>
         <div class="summary-value">@Model.TotalLocationCount</div>
-        <div class="summary-sub">Karton / Lagerpositionen</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-label">Positionen</div>
+        <div class="summary-value">@Model.TotalStockPositionsAll</div>
     </div>
     <div class="summary-card">
         <div class="summary-label">NEM gesamt</div>
         <div class="summary-value">@Model.TotalNemAll.ToString("0.##")</div>
-        <div class="summary-sub">Summe aller NEM (&uuml;ber alle Lagerpl&auml;tze)</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-label">Einzelteile gesamt</div>
-        <div class="summary-value">@Model.TotalPiecesAll</div>
-        <div class="summary-sub">aus allen Multi-Part-Artikeln</div>
     </div>
 </div>
 
-<div class="card filter-card mb-3">
+<div class="action-grid mb-3">
+    <a asp-page="/Stock/Add" class="action-card">
+        <strong>1) Bestand erhöhen</strong>
+        <span class="action-note">Neue Ware direkt einbuchen.</span>
+    </a>
+    <a asp-page="/Bookings/Index" class="action-card">
+        <strong>2) Zwischen Plätzen buchen</strong>
+        <span class="action-note">Von frei ↔ Lagerplatz in Stücklogik.</span>
+    </a>
+    <a asp-page="/Inventory/Set" class="action-card">
+        <strong>3) Inventur setzen</strong>
+        <span class="action-note">Ist-Bestand direkt korrigieren.</span>
+    </a>
+</div>
+
+<div class="card mb-3">
     <div class="card-body">
         <form method="get" class="filter-bar">
-            <div class="form-group">
-                <label asp-for="SearchTerm">Suche</label>
-                <input asp-for="SearchTerm" class="form-control" placeholder="Artikel, Firma, Produktnummer, Kategorie..." />
-            </div>
+            <input asp-for="SearchTerm" class="form-control" placeholder="Suche Artikel/Firma/Produktnummer/Kategorie" />
 
-            <div class="form-group">
-                <label asp-for="FilterLocationId">Lagerplatz</label>
-                <select asp-for="FilterLocationId" class="form-select">
-                    <option value="">Alle</option>
-                    @foreach (var loc in Model.Locations)
-                    {
-                        <option value="@loc.Id">@loc.Name</option>
-                    }
-                </select>
-            </div>
+            <select asp-for="FilterLocationId" class="form-select">
+                <option value="">Alle Lagerplätze</option>
+                @foreach (var loc in Model.Locations)
+                {
+                    <option value="@loc.Id">@loc.Name</option>
+                }
+            </select>
 
-            <div class="form-group">
-                <label asp-for="OnlyFree">Nur freie Best&auml;nde</label><br />
+            <label class="inline-check">
                 <input asp-for="OnlyFree" type="checkbox" />
-            </div>
+                Nur freie Bestände
+            </label>
 
-            <div class="form-group">
-                <button type="submit" class="btn-main">
-                    Filter anwenden
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary">Filtern</button>
+            <a asp-page="/Index" class="btn btn-outline-secondary">Reset</a>
         </form>
-        <p class="hint-text mb-0 mt-2">Suche durchsucht Artikelname, Firma, Produktnummer und Kategorie.</p>
     </div>
 </div>
 
-
 <div class="card">
-    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-        <div>
-            <h2 class="card-title mb-0">Bestands&uuml;bersicht</h2>
-            <small class="text-muted">Live Datenquelle aus dem FireworksContext</small>
-        </div>
-        <span class="badge bg-secondary soft-badge">Positionen (gefiltert): @Model.Stock.Count</span>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0">Bestand (@Model.Stock.Count)</h2>
     </div>
     <div class="card-body table-wrapper">
         <table class="table table-sm custom-table">
             <thead>
                 <tr>
                     <th>Artikel</th>
-                    <th>Kategorie</th>
-                    <th>Produktnummer</th>
                     <th>Firma</th>
                     <th>Lagerplatz</th>
-                    <th class="text-end">Volle Einheiten</th>
-                    <th class="text-end">Lose St&uuml;ck</th>
-                    <th class="text-end">Gesamt St&uuml;ck</th>
-                    <th class="text-end">NEM gesamt</th>
+                    <th class="text-end">Volle</th>
+                    <th class="text-end">Lose</th>
+                    <th class="text-end">Stück gesamt</th>
+                    <th class="text-end">NEM</th>
                 </tr>
             </thead>
             <tbody>
             @if (!Model.Stock.Any())
             {
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">
-                        Noch keine Artikel oder Best&auml;nde vorhanden oder Filter liefert keine Treffer.
-                    </td>
-                </tr>
+                <tr><td colspan="7" class="text-center text-muted py-3">Keine Treffer.</td></tr>
             }
             else
             {
@@ -108,37 +97,12 @@
                 {
                     <tr>
                         <td>@row.ArticleName</td>
-                        <td>@row.Category</td>
-                        <td>@row.ProductNumber</td>
                         <td>@row.Company</td>
-                        <td>
-                            @if (row.IsFree)
-                            {
-                                <span class="badge-free">frei</span>
-                            }
-                            else
-                            {
-                                <span class="badge-location">@row.LocationName</span>
-                            }
-                        </td>
+                        <td>@(row.IsFree ? "frei" : row.LocationName)</td>
                         <td class="text-end">@row.FullUnits</td>
                         <td class="text-end">@row.LoosePieces</td>
-                        <td class="text-end">
-                            @if (row.TotalPieces.HasValue)
-                            {
-                                @row.TotalPieces.Value
-                            }
-                            else
-                            {
-                                @(row.FullUnits + row.LoosePieces)
-                            }
-                        </td>
-                        <td class="text-end">
-                            @if (row.TotalNEM.HasValue)
-                            {
-                                @row.TotalNEM.Value.ToString("0.##")
-                            }
-                        </td>
+                        <td class="text-end">@(row.TotalPieces ?? (row.FullUnits + row.LoosePieces))</td>
+                        <td class="text-end">@row.TotalNEM?.ToString("0.##")</td>
                     </tr>
                 }
             }
